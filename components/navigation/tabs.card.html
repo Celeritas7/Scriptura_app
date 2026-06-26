@@ -1,0 +1,50 @@
+<!-- @dsCard group="Components" viewport="700x240" name="Tabs" subtitle="Two-level navigation: content tabs & mode tabs" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--bg-primary); font-family: var(--font-ui);
+         padding: 22px; color: var(--text-primary); }
+  .rail { display: flex; gap: 0.5rem; padding: 0.5rem; background: var(--bg-secondary);
+          border: 1px solid var(--border-color); border-radius: var(--radius-xl); margin-bottom: 16px; }
+  .rail.center { justify-content: center; }
+  .lbl { font-size: var(--fs-micro); color: var(--text-muted); text-transform: uppercase;
+         letter-spacing: 1px; margin: 2px 0 6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { Tab } = window.ScripturaDesignSystem_72b484;
+  function Demo() {
+    const [content, setContent] = React.useState('consonants');
+    const [mode, setMode] = React.useState('practice');
+    return (
+      <React.Fragment>
+        <div className="lbl">Content type — stacked</div>
+        <div className="rail">
+          <Tab layout="stacked" icon="က" count={33} accent="indic" active={content==='consonants'} onClick={()=>setContent('consonants')}>Consonants</Tab>
+          <Tab layout="stacked" icon="ကာ" count={0} accent="indic" active={content==='cv'} onClick={()=>setContent('cv')}>C + V</Tab>
+          <Tab layout="stacked" icon="စာ" count={0} accent="indic" active={content==='words'} onClick={()=>setContent('words')}>Words</Tab>
+          <Tab layout="stacked" icon="…" count={0} accent="indic" active={content==='sentences'} onClick={()=>setContent('sentences')}>Sentences</Tab>
+        </div>
+        <div className="lbl">Practice mode — inline</div>
+        <div className="rail center">
+          <Tab icon="✏️" accent="practice" active={mode==='practice'} onClick={()=>setMode('practice')}>Practice</Tab>
+          <Tab icon="🧠" accent="quiz" active={mode==='quiz'} onClick={()=>setMode('quiz')}>Quiz</Tab>
+          <Tab icon="📝" accent="sheet" active={mode==='sheet'} onClick={()=>setMode('sheet')}>Sheet</Tab>
+          <Tab icon="📊" accent="review" active={mode==='review'} onClick={()=>setMode('review')}>Review</Tab>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

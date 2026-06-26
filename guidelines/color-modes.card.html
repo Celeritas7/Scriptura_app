@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Mode Accents" subtitle="One hue per functional mode — drives gradients & glows" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-primary);font-family:var(--font-ui);padding:18px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .sw{border-radius:var(--radius-lg);height:64px;display:flex;align-items:flex-end;padding:9px;}
+  .name{color:#fff;font-size:var(--fs-small);font-weight:600;}
+  .val{color:rgba(255,255,255,.85);font-size:var(--fs-hint);display:block;font-variant-numeric:tabular-nums;}
+  .cap{color:var(--text-muted);font-size:var(--fs-hint);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px;}
+</style></head>
+<body>
+  <div class="cap">Practice · Quiz · Sheet · Review</div>
+  <div class="grid">
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-practice),var(--accent-practice-deep))"><span><span class="name">practice</span><span class="val">#22c55e</span></span></div>
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-quiz),var(--accent-quiz-deep))"><span><span class="name">quiz</span><span class="val">#3b82f6</span></span></div>
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-sheet),var(--accent-sheet-deep))"><span><span class="name">sheet</span><span class="val">#8b5cf6</span></span></div>
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-review),var(--accent-review-deep))"><span><span class="name">review</span><span class="val">#f97316</span></span></div>
+  </div>
+</body></html>

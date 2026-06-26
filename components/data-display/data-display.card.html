@@ -1,0 +1,55 @@
+<!-- @dsCard group="Components" viewport="700x280" name="Cards, Pills & Stats" subtitle="Surface panels, language chips, stat chips & tiles" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; background: var(--bg-primary); font-family: var(--font-ui);
+         padding: 22px; color: var(--text-primary); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .lbl { font-size: var(--fs-micro); color: var(--text-muted); text-transform: uppercase;
+         letter-spacing: 1px; width: 100%; margin: 2px 0 -4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { Card, Pill, StatChip } = window.ScripturaDesignSystem_72b484;
+  function Demo() {
+    const [lang, setLang] = React.useState('burmese');
+    return (
+      <React.Fragment>
+        <div className="lbl">Language pills</div>
+        <div className="row">
+          <Pill native="မြန်မာ" nativeFont="var(--font-burmese)" accent="indic" active={lang==='burmese'} onClick={()=>setLang('burmese')}>Burmese</Pill>
+          <Pill native="हिन्दी" nativeFont="var(--font-devanagari)" accent="indic" active={lang==='hindi'} onClick={()=>setLang('hindi')}>Hindi</Pill>
+          <Pill native="ひらがな" nativeFont="var(--font-japanese)" accent="cjk" active={lang==='hira'} onClick={()=>setLang('hira')}>Hiragana</Pill>
+        </div>
+        <div className="lbl">Stat chips · tiles</div>
+        <div className="row">
+          <StatChip tone="correct" value={12} label="Correct" />
+          <StatChip tone="incorrect" value={3} label="Wrong" />
+          <StatChip tone="streak" value={5} label="Streak" />
+          <StatChip block tone="quiz" value="33" label="Total" />
+          <StatChip block tone="streak" value="64%" label="Progress" />
+        </div>
+        <div className="lbl">Card surface</div>
+        <div className="row">
+          <Card interactive style={{textAlign:'center', minWidth:140}}>
+            <div style={{fontSize:'2.5rem', fontFamily:'var(--font-devanagari)'}}>क</div>
+            <div style={{fontWeight:600, marginTop:6}}>Indic</div>
+          </Card>
+          <Card style={{minWidth:180, color:'var(--text-secondary)'}}>Plain panel surface</Card>
+        </div>
+      </React.Fragment>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

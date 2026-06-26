@@ -1,0 +1,25 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Radius Scale" subtitle="Friendly large radii — pills for chips, 12–20px for cards" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-primary);font-family:var(--font-ui);padding:18px;color:var(--text-primary);}
+  .grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
+  .item{text-align:center;}
+  .box{width:74px;height:54px;background:var(--bg-card);border:1px solid var(--border-color);
+       border-bottom:3px solid var(--accent-quiz);}
+  .tok{display:block;font-size:var(--fs-hint);color:var(--text-muted);margin-top:7px;}
+  .pill{width:110px;height:40px;border-radius:var(--radius-pill);display:flex;align-items:center;justify-content:center;
+        background:var(--accent-indic);color:#fff;font-size:var(--fs-micro);}
+  .circ{width:44px;height:44px;border-radius:var(--radius-full);background:var(--bg-secondary);border:1px solid var(--border-color);}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="item"><div class="box" style="border-radius:var(--radius-sm)"></div><span class="tok">sm · 5px</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-md)"></div><span class="tok">md · 10px</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-lg)"></div><span class="tok">lg · 12px</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-xl)"></div><span class="tok">xl · 16px</span></div>
+    <div class="item"><div class="box" style="border-radius:var(--radius-2xl)"></div><span class="tok">2xl · 20px</span></div>
+    <div class="item"><div class="pill">pill · 35px</div><span class="tok">radius-pill</span></div>
+    <div class="item"><div class="circ"></div><span class="tok">full · ●</span></div>
+  </div>
+</body></html>

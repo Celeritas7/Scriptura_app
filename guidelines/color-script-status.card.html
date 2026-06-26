@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Script & Status" subtitle="Script-family accents and semantic status hues" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-primary);font-family:var(--font-ui);padding:18px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .sw{border-radius:var(--radius-lg);height:64px;display:flex;align-items:flex-end;padding:9px;}
+  .name{color:#fff;font-size:var(--fs-small);font-weight:600;}
+  .val{color:rgba(255,255,255,.85);font-size:var(--fs-hint);display:block;font-variant-numeric:tabular-nums;}
+  .cap{color:var(--text-muted);font-size:var(--fs-hint);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px;}
+</style></head>
+<body>
+  <div class="cap">Indic · CJK · Success · Error</div>
+  <div class="grid">
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-indic),var(--accent-indic-deep))"><span><span class="name">indic</span><span class="val">#f59e0b</span></span></div>
+    <div class="sw" style="background:linear-gradient(135deg,var(--accent-cjk),var(--accent-cjk-deep))"><span><span class="name">cjk</span><span class="val">#ec4899</span></span></div>
+    <div class="sw" style="background:var(--success)"><span><span class="name">success</span><span class="val">#22c55e</span></span></div>
+    <div class="sw" style="background:var(--error)"><span><span class="name">error</span><span class="val">#ef4444</span></span></div>
+  </div>
+</body></html>

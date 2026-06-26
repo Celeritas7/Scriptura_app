@@ -1,0 +1,22 @@
+<!-- @dsCard group="Type" viewport="700x230" name="Script Fonts" subtitle="One Noto Sans family per writing system" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-primary);font-family:var(--font-ui);padding:18px;color:var(--text-primary);}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .cell{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);
+        padding:12px 14px;display:flex;align-items:center;gap:12px;}
+  .glyph{font-size:2.4rem;line-height:1;color:var(--text-primary);}
+  .nm{font-size:var(--fs-small);font-weight:600;}
+  .tok{font-size:var(--fs-hint);color:var(--text-muted);display:block;}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell"><span class="glyph" style="font-family:var(--font-burmese)">က</span><span><span class="nm">Burmese</span><span class="tok">--font-burmese</span></span></div>
+    <div class="cell"><span class="glyph" style="font-family:var(--font-devanagari)">क</span><span><span class="nm">Devanagari</span><span class="tok">--font-devanagari</span></span></div>
+    <div class="cell"><span class="glyph" style="font-family:var(--font-telugu)">క</span><span><span class="nm">Telugu</span><span class="tok">--font-telugu</span></span></div>
+    <div class="cell"><span class="glyph" style="font-family:var(--font-japanese)">あ</span><span><span class="nm">Japanese</span><span class="tok">--font-japanese</span></span></div>
+    <div class="cell"><span class="glyph" style="font-family:var(--font-korean)">한</span><span><span class="nm">Korean</span><span class="tok">--font-korean</span></span></div>
+    <div class="cell"><span class="glyph" style="font-family:var(--font-chinese)">汉</span><span><span class="nm">Chinese</span><span class="tok">--font-chinese</span></span></div>
+  </div>
+</body></html>

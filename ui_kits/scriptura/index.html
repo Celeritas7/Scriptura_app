@@ -1,0 +1,152 @@
+<!-- @dsCard group="Scriptura App" viewport="1200x800" name="Scriptura — study app" subtitle="Dashboard → guided lessons, SRS review, word builder" -->
+<!-- @startingPoint section="Scriptura App" subtitle="Gamified Burmese script-learning app — full interactive flow" viewport="1200x820" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scriptura — Learn to Write Burmese</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="data.js"></script>
+<style>
+  html, body { margin: 0; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-ui); }
+  #root { min-height: 100vh; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="DrawCanvas.jsx"></script>
+<script type="text/babel" src="StrokeGlyph.jsx"></script>
+<script type="text/babel" src="Flashcard.jsx"></script>
+<script type="text/babel" src="LessonNode.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel" src="LessonPath.jsx"></script>
+<script type="text/babel" src="LessonView.jsx"></script>
+<script type="text/babel" src="ReviewSession.jsx"></script>
+<script type="text/babel" src="WordBuilder.jsx"></script>
+<script type="text/babel" data-presets="react">
+  const D = window.ScripturaData;
+
+  const THEMES = {
+    midnight: { icon: '🌙', label: 'Midnight', vars: {} },
+    dusk: { icon: '🌆', label: 'Dusk', vars: {
+      '--bg-primary': '#13131b', '--bg-secondary': '#1c1c28', '--bg-card': '#242433',
+      '--bg-elevated': '#2e2e40', '--border-color': '#34344a' } },
+    daylight: { icon: '☀️', label: 'Daylight', vars: {
+      '--bg-primary': '#f1f2f7', '--bg-secondary': '#ffffff', '--bg-card': '#ffffff',
+      '--bg-elevated': '#eceef5', '--border-color': '#e2e3ee',
+      '--text-primary': '#1a1a25', '--text-secondary': '#5a5a72', '--text-muted': '#9a9ab0',
+      '--shadow-card': '0 4px 18px rgba(20,20,40,0.10)' } },
+  };
+
+  const seedLearned = ['က','ခ','ဂ','ဃ','င','စ','ဇ','ည'];
+
+  function App() {
+    const [theme, setTheme] = React.useState('midnight');
+    const [route, setRoute] = React.useState({ screen: 'home' });
+    const [learned, setLearned] = React.useState(() => new Set(seedLearned));
+    const [profile, setProfile] = React.useState(() => ({ ...D.profile }));
+    const [queue] = React.useState(() => D.allChars.filter((c) => c.srs === 'due'));
+
+    const activeUnitId = React.useMemo(() => {
+      const u = D.units.find((u) => !u.chars.every((c) => learned.has(c.char)));
+      return (u || D.units[D.units.length - 1]).id;
+    }, [learned]);
+
+    const addXp = (xp) => setProfile((p) => ({ ...p, todayXp: p.todayXp + xp, levelXp: Math.min(p.levelMax, p.levelXp + xp) }));
+
+    const go = (r) => setRoute(r);
+
+    const finishLesson = (chars, xp) => {
+      setLearned((prev) => { const n = new Set(prev); chars.forEach((c) => n.add(c)); return n; });
+      addXp(xp);
+      setRoute({ screen: 'path' });
+    };
+
+    const { Button } = window.ScripturaDesignSystem_72b484;
+
+    // --- top bar ---
+    const navItems = [
+      { id: 'home', label: 'Home', icon: '🏠' },
+      { id: 'path', label: 'Path', icon: '🗺️' },
+      { id: 'review', label: 'Review', icon: '🧠' },
+      { id: 'build', label: 'Build', icon: '🧩' },
+    ];
+    const navActive = { home: 'home', path: 'path', lesson: 'path', review: 'review', build: 'build' }[route.screen];
+
+    const NavPill = ({ item }) => (
+      <button type="button" onClick={() => go({ screen: item.id })}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.95rem',
+                 borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-small)',
+                 border: 'none', transition: 'all var(--dur-fast) var(--ease)',
+                 background: navActive === item.id ? 'var(--bg-elevated)' : 'transparent',
+                 color: navActive === item.id ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+        <span>{item.icon}</span><span>{item.label}</span>
+      </button>
+    );
+
+    let body;
+    if (route.screen === 'home') body = <window.Dashboard profile={profile} units={D.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} />;
+    else if (route.screen === 'path') body = <window.LessonPath units={D.units} learned={learned} activeUnitId={activeUnitId} onGo={go} />;
+    else if (route.screen === 'lesson') {
+      const unit = D.units.find((u) => u.id === route.unitId);
+      body = <window.LessonView unit={unit} learned={learned} xpPerCard={profile.xpPerCard}
+                onComplete={finishLesson} onExit={() => go({ screen: 'path' })} />;
+    }
+    else if (route.screen === 'review') body = <window.ReviewSession queue={queue} xpPerCard={profile.xpPerCard}
+                onExit={() => go({ screen: 'home' })} onComplete={(xp) => { addXp(xp); go({ screen: 'home' }); }} />;
+    else if (route.screen === 'build') body = <window.WordBuilder />;
+
+    const themeVars = THEMES[theme].vars;
+
+    return (
+      <div style={{ minHeight: '100vh', ...themeVars, background: 'var(--bg-primary)', color: 'var(--text-primary)',
+                    transition: 'background var(--dur-base) var(--ease)' }}>
+        {/* APP BAR */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 'var(--space-5)',
+                      padding: 'var(--space-4) var(--space-6)', background: 'var(--bg-secondary)',
+                      borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+          <div onClick={() => go({ screen: 'home' })} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <span style={{ fontSize: '1.4rem' }}>✍️</span>
+            <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)',
+                           background: 'var(--gradient-display)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Scriptura</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-primary)', padding: 4, borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-color)' }}>
+            {navItems.map((it) => <NavPill key={it.id} item={it} />)}
+          </div>
+          <div style={{ flex: 1 }} />
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.85rem',
+                         background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-pill)', fontSize: 'var(--fs-small)' }}>
+            🔥 <b style={{ color: 'var(--accent-review)' }}>{profile.streak}</b></span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {Object.entries(THEMES).map(([k, t]) => (
+              <button key={k} type="button" title={t.label} onClick={() => setTheme(k)}
+                style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '1rem',
+                         background: theme === k ? 'var(--bg-elevated)' : 'transparent',
+                         border: `1px solid ${theme === k ? 'var(--text-secondary)' : 'var(--border-color)'}` }}>{t.icon}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* CONTENT */}
+        <div style={{ maxWidth: 920, margin: '0 auto', padding: 'var(--space-7) var(--space-6) var(--space-9)' }}>
+          {body}
+        </div>
+      </div>
+    );
+  }
+
+  function mount() {
+    const need = ['Dashboard','LessonPath','LessonView','ReviewSession','WordBuilder','DrawCanvas','StrokeGlyph','Flashcard','LessonNode'];
+    if (!window.ScripturaDesignSystem_72b484 || need.some((n) => !window[n])) return setTimeout(mount, 30);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  }
+  mount();
+</script>
+</body>
+</html>

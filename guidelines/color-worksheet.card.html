@@ -1,0 +1,28 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Worksheet & Mastery" subtitle="Light worksheet surfaces and the review heatmap scale" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-card);font-family:var(--font-ui);padding:18px;}
+  .cap{color:var(--text-muted);font-size:var(--fs-hint);text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;}
+  .row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .chip{display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:var(--fs-hint);}
+  .box{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border-color);}
+  .heat{width:46px;height:34px;border-radius:var(--radius-sm);}
+</style></head>
+<body>
+  <div class="cap">Worksheet cells</div>
+  <div class="row">
+    <span class="chip"><span class="box" style="background:var(--cell-empty)"></span>empty</span>
+    <span class="chip"><span class="box" style="background:var(--cell-complete)"></span>correct</span>
+    <span class="chip"><span class="box" style="background:var(--cell-incorrect)"></span>needs work</span>
+    <span class="chip"><span class="box" style="background:var(--canvas-bg)"></span>canvas-bg</span>
+  </div>
+  <div class="cap">Mastery heatmap</div>
+  <div class="row">
+    <span class="chip"><span class="heat" style="background:var(--mastery-strong);border:1px solid var(--success)"></span>strong</span>
+    <span class="chip"><span class="heat" style="background:var(--mastery-good);border:1px solid var(--accent-quiz)"></span>good</span>
+    <span class="chip"><span class="heat" style="background:var(--mastery-medium);border:1px solid var(--accent-indic)"></span>medium</span>
+    <span class="chip"><span class="heat" style="background:var(--mastery-weak);border:1px solid var(--accent-review)"></span>weak</span>
+    <span class="chip"><span class="heat" style="background:var(--mastery-very-weak);border:1px solid var(--error)"></span>very weak</span>
+  </div>
+</body></html>

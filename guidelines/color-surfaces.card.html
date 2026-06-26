@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Surfaces" subtitle="Four-tier dark elevation, deepest to raised" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-secondary);font-family:var(--font-ui);padding:18px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .sw{border-radius:var(--radius-lg);border:1px solid var(--border-color);height:80px;
+      display:flex;align-items:flex-end;padding:10px;}
+  .meta{display:block;}
+  .name{color:var(--text-primary);font-size:var(--fs-small);font-weight:600;}
+  .val{color:var(--text-secondary);font-size:var(--fs-hint);font-variant-numeric:tabular-nums;}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="sw" style="background:var(--bg-primary)"><span class="meta"><span class="name">primary</span><span class="val">#0a0a0f</span></span></div>
+    <div class="sw" style="background:var(--bg-secondary)"><span class="meta"><span class="name">secondary</span><span class="val">#12121a</span></span></div>
+    <div class="sw" style="background:var(--bg-card)"><span class="meta"><span class="name">card</span><span class="val">#1a1a25</span></span></div>
+    <div class="sw" style="background:var(--bg-elevated)"><span class="meta"><span class="name">elevated</span><span class="val">#222230</span></span></div>
+  </div>
+</body></html>

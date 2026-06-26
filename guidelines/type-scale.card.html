@@ -1,0 +1,19 @@
+<!-- @dsCard group="Type" viewport="700x300" name="UI Type Scale" subtitle="Outfit across the interface sizes" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-card);font-family:var(--font-ui);padding:20px;color:var(--text-primary);}
+  .row{display:flex;align-items:baseline;gap:16px;padding:5px 0;border-bottom:1px solid var(--border-color);}
+  .row:last-child{border:none;}
+  .spec{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tok{color:var(--text-muted);font-size:var(--fs-hint);font-variant-numeric:tabular-nums;white-space:nowrap;}
+</style></head>
+<body>
+  <div class="row"><span class="spec" style="font-size:var(--fs-title);font-weight:700">Page title</span><span class="tok">--fs-title · 1.5rem · 700</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-lg);font-weight:600">Card name / CTA</span><span class="tok">--fs-lg · 1.2rem · 600</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-base)">Roman reading — base body</span><span class="tok">--fs-base · 1rem · 400</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-body);font-weight:500">Default UI text / buttons</span><span class="tok">--fs-body · 0.95rem · 500</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-small)">Settings & section labels</span><span class="tok">--fs-small · 0.85rem</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:var(--tracking-tight);color:var(--text-secondary)">Tab sub-labels &amp; pills</span><span class="tok">--fs-micro · 0.8rem</span></div>
+  <div class="row"><span class="spec" style="font-size:var(--fs-hint);text-transform:uppercase;letter-spacing:var(--tracking-tight);color:var(--text-muted)">Answer label / caption</span><span class="tok">--fs-hint · 0.75rem</span></div>
+</body></html>

@@ -1,0 +1,19 @@
+<!-- @dsCard group="Brand" viewport="700x170" name="Colored Glows" subtitle="The signature shadow — every accent casts its own tinted glow" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-primary);font-family:var(--font-ui);padding:26px 20px;color:#fff;}
+  .grid{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;}
+  .tile{width:120px;height:54px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;
+        font-size:var(--fs-micro);font-weight:600;}
+  .tok{display:block;text-align:center;color:var(--text-muted);font-size:var(--fs-hint);margin-top:9px;}
+  .item{text-align:center;}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="item"><div class="tile" style="background:linear-gradient(135deg,var(--accent-practice),var(--accent-practice-deep));box-shadow:var(--glow-practice)">practice</div><span class="tok">--glow-practice</span></div>
+    <div class="item"><div class="tile" style="background:linear-gradient(135deg,var(--accent-indic),var(--accent-indic-deep));box-shadow:var(--glow-indic)">indic</div><span class="tok">--glow-indic</span></div>
+    <div class="item"><div class="tile" style="background:linear-gradient(135deg,var(--accent-cjk),var(--accent-cjk-deep));box-shadow:var(--glow-cjk)">cjk</div><span class="tok">--glow-cjk</span></div>
+    <div class="item"><div class="tile" style="background:linear-gradient(135deg,var(--accent-quiz),var(--accent-quiz-deep));box-shadow:var(--glow-quiz)">quiz</div><span class="tok">--glow-quiz</span></div>
+  </div>
+</body></html>

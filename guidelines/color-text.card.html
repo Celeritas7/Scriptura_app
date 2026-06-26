@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Text & Borders" subtitle="On-dark text tiers and the hairline border" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-card);font-family:var(--font-ui);padding:20px;}
+  .stack{display:flex;flex-direction:column;gap:10px;}
+  .line{display:flex;align-items:baseline;gap:14px;}
+  .tp{font-size:1.4rem;font-weight:600;}
+  .nm{font-size:var(--fs-hint);color:var(--text-muted);font-variant-numeric:tabular-nums;margin-left:auto;}
+  .border-demo{height:0;border-top:1px solid var(--border-color);margin-top:6px;}
+</style></head>
+<body>
+  <div class="stack">
+    <div class="line"><span class="tp" style="color:var(--text-primary)">Primary — headings & body</span><span class="nm">#f0f0f5</span></div>
+    <div class="line"><span class="tp" style="color:var(--text-secondary)">Secondary — labels & support</span><span class="nm">#8888aa</span></div>
+    <div class="line"><span class="tp" style="color:var(--text-muted)">Muted — hints & disabled</span><span class="nm">#555566</span></div>
+    <div class="line" style="margin-top:4px"><span style="color:var(--text-secondary);font-size:var(--fs-small)">border-color hairline</span><span class="nm">#2a2a3a</span></div>
+    <div class="border-demo"></div>
+  </div>
+</body></html>

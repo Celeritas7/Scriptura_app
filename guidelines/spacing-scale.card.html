@@ -1,0 +1,19 @@
+<!-- @dsCard group="Spacing" viewport="700x230" name="Spacing Scale" subtitle="rem-based steps on a loose 4px grid" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg-card);font-family:var(--font-ui);padding:20px;color:var(--text-primary);}
+  .row{display:flex;align-items:center;gap:14px;padding:3px 0;}
+  .bar{height:14px;background:linear-gradient(135deg,var(--accent-indic),var(--accent-indic-deep));border-radius:3px;}
+  .tok{font-size:var(--fs-hint);color:var(--text-muted);width:170px;font-variant-numeric:tabular-nums;}
+</style></head>
+<body>
+  <div class="row"><span class="tok">--space-1 · 4px</span><span class="bar" style="width:4px"></span></div>
+  <div class="row"><span class="tok">--space-3 · 8px</span><span class="bar" style="width:8px"></span></div>
+  <div class="row"><span class="tok">--space-4 · 12px</span><span class="bar" style="width:12px"></span></div>
+  <div class="row"><span class="tok">--space-5 · 16px</span><span class="bar" style="width:16px"></span></div>
+  <div class="row"><span class="tok">--space-6 · 20px</span><span class="bar" style="width:20px"></span></div>
+  <div class="row"><span class="tok">--space-7 · 24px (card pad)</span><span class="bar" style="width:24px"></span></div>
+  <div class="row"><span class="tok">--space-8 · 32px</span><span class="bar" style="width:32px"></span></div>
+  <div class="row"><span class="tok">--space-9 · 40px</span><span class="bar" style="width:40px"></span></div>
+</body></html>
