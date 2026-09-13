@@ -67,14 +67,16 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
       {/* STEP BODY */}
       {step === 'learn' && (
         <Card style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <window.StrokeGlyph char={c.char} accent={accent} size={220} />
+          <window.StrokeGlyph char={c.char} accent={accent} size={220} font={unit.font} />
           <div style={{ flex: '1 1 220px', minWidth: 0 }}>
             <div style={{ fontSize: '3rem', fontWeight: 700, color: accent }}>{c.roman}</div>
-            <div style={{ fontFamily: 'var(--font-burmese)', fontSize: 'var(--fs-title)', marginTop: 4 }}>{c.name}</div>
-            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{c.gloss}”</div>
+            {c.name && c.name !== c.roman && <div style={{ fontFamily: unit.font, fontSize: 'var(--fs-title)', marginTop: 4 }}>{c.name}</div>}
+            {c.gloss && <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{c.gloss}”</div>}
+            {c.cognate && (
             <div style={{ marginTop: 'var(--space-5)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>
               <span style={{ fontFamily: 'var(--font-devanagari)', fontSize: '1.4rem', color: 'var(--text-primary)' }}>{c.cognate}</span> Devanagari cognate
             </div>
+            )}
             <div style={{ marginTop: 'var(--space-6)' }}>
               <Button accent={unit.accent} onClick={() => setStep('trace')}>I've got it →</Button>
             </div>
@@ -85,10 +87,10 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
       {step === 'trace' && (
         <Card>
           <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: 'var(--space-5)' }}>
-            Trace <b style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-burmese)' }}>{c.char}</b> · <i>{c.roman}</i>
+            Trace <b style={{ color: 'var(--text-primary)', fontFamily: unit.font }}>{c.char}</b> · <i>{c.roman}</i>
           </div>
           <div ref={(el) => { cv.current = el && el.querySelector('canvas'); }}>
-            <window.DrawCanvas guide={c.char} guideFont="var(--font-burmese)" showGuide={true} stroke={8} size={340} accent={accent} />
+            <window.DrawCanvas guide={c.char} guideFont={unit.font} showGuide={true} stroke={8} size={340} accent={accent} />
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', marginTop: 'var(--space-6)' }}>
             <Button variant="secondary" onClick={() => cv.current && cv.current.__clear && cv.current.__clear()}>🗑 Clear</Button>
@@ -100,7 +102,7 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
       {step === 'quiz' && (
         <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-small)' }}>Recall the character for this sound, then flip to check.</div>
-          <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} front="roman" accent={accent} flipped={flipped} onFlip={setFlipped} />
+          <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} font={unit.font} front="roman" accent={accent} flipped={flipped} onFlip={setFlipped} />
           {!flipped ? (
             <Button variant="secondary" onClick={() => setFlipped(true)}>Flip to check ↻</Button>
           ) : (

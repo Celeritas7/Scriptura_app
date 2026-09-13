@@ -8,6 +8,8 @@ export interface ProgressRingProps {
   /** Ring thickness in px. */
   stroke?: number;
   accent?: 'practice' | 'quiz' | 'sheet' | 'review' | 'indic' | 'cjk';
+  /** Explicit ring color (any CSS color), overrides `accent`. */
+  color?: string;
   /** Big centered value (e.g. "24"). */
   label?: React.ReactNode;
   /** Small centered caption under the label (e.g. "/ 30 XP"). */

@@ -18,7 +18,7 @@ function LessonNode({ unit, learned, total, status, onClick }) {
                opacity: locked ? 0.55 : 1, transition: 'all var(--dur-base) var(--ease)' }}>
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <ProgressRing value={done ? total : learned} max={total} size={76} stroke={7} accent={unit.accent}>
-          <span style={{ fontFamily: 'var(--font-burmese)', fontSize: '2rem', lineHeight: 1,
+          <span style={{ fontFamily: unit.font || 'var(--font-burmese)', fontSize: '2rem', lineHeight: 1,
                          color: locked ? 'var(--text-muted)' : 'var(--text-primary)' }}>
             {locked ? '🔒' : unit.chars[0].char}
           </span>
@@ -29,7 +29,7 @@ function LessonNode({ unit, learned, total, status, onClick }) {
           <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--text-primary)' }}>{unit.title}</span>
           {done && <span style={{ color: accent, fontSize: 'var(--fs-body)' }}>✓</span>}
         </div>
-        <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontFamily: 'var(--font-burmese)' }}>{unit.subtitle}</div>
+        <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontFamily: unit.font || 'var(--font-burmese)' }}>{unit.subtitle}</div>
         <div style={{ marginTop: 6, fontSize: 'var(--fs-micro)', color: locked ? 'var(--text-muted)' : accent, fontWeight: 600 }}>
           {locked ? 'Locked' : done ? 'Complete' : `${learned} / ${total} learned · ${pct}%`}
         </div>

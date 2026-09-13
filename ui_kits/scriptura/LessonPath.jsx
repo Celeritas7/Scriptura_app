@@ -1,8 +1,7 @@
 // LessonPath — the vertical path of unit lesson nodes with overall progress.
-function LessonPath({ units, learned, activeUnitId, onGo }) {
+function LessonPath({ units, learned, activeUnitId, onGo, langName }) {
   const { Card, ProgressRing } = window.ScripturaDesignSystem_72b484;
-  const D = window.ScripturaData;
-  const total = D.allChars.length;
+  const total = units.reduce((n, u) => n + u.chars.length, 0);
   const learnedCount = learned.size;
   const activeIdx = units.findIndex((u) => u.id === activeUnitId);
 
@@ -17,7 +16,7 @@ function LessonPath({ units, learned, activeUnitId, onGo }) {
       <Card style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
         <ProgressRing value={learnedCount} max={total} size={88} stroke={9} accent="indic" label={`${Math.round(learnedCount/total*100)}%`} />
         <div>
-          <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 700 }}>Burmese Consonants</div>
+          <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 700 }}>{langName || 'Burmese'} characters</div>
           <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>
             {learnedCount} of {total} learned · {units.length} units
           </div>

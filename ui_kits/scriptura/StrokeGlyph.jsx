@@ -1,7 +1,7 @@
 // StrokeGlyph — an animated "watch it form" reveal of a character on a light
 // card. Without true stroke-path data we use a top-to-bottom wipe with a
 // travelling pen, which conveys general writing direction and is replayable.
-function StrokeGlyph({ char, size = 220, accent = 'var(--accent-practice)', auto = true }) {
+function StrokeGlyph({ char, size = 220, accent = 'var(--accent-practice)', auto = true, font = 'var(--font-burmese)' }) {
   const [play, setPlay] = React.useState(0);     // bump to replay
   const [revealed, setRevealed] = React.useState(!auto);
 
@@ -18,10 +18,10 @@ function StrokeGlyph({ char, size = 220, accent = 'var(--accent-practice)', auto
                     borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-inset)', overflow: 'hidden' }}>
         {/* faint full glyph as a target ghost */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontFamily: 'var(--font-burmese)', fontSize: size * 0.66, color: 'rgba(120,120,140,0.14)' }}>{char}</div>
+                      fontFamily: font, fontSize: size * 0.66, color: 'rgba(120,120,140,0.14)' }}>{char}</div>
         {/* inked glyph, wiped in top→bottom */}
         <div key={play} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontFamily: 'var(--font-burmese)', fontSize: size * 0.66, color: '#1a1a25',
+                      fontFamily: font, fontSize: size * 0.66, color: '#1a1a25',
                       clipPath: revealed ? 'inset(0 0 0 0)' : 'inset(0 0 100% 0)',
                       transition: `clip-path ${dur}ms var(--ease)` }}>{char}</div>
         {/* travelling pen line */}

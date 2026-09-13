@@ -1,16 +1,16 @@
 @echo off
-title Scriptura local server
-REM Double-click to run Scriptura locally. Leave this window open while testing.
+title Weekly Focus local server
+REM Double-click to run the app locally. Leave this window open while testing.
 cd /d "%~dp0"
 
 set "ROOT=."
-if exist "index.html" goto :found
-if exist "app\index.html" set "ROOT=app" & goto :found
-echo Could not find index.html here or in an "app" folder.
-echo Put this .bat in the same folder as index.html.
-echo Current folder: %CD%
-pause & goto :eof
-:found
+if exist "app\index.html" set "ROOT=app"
+if not exist "%ROOT%\index.html" (
+  echo Could not find index.html here or in an "app" folder.
+  echo Put this .bat in the same folder as index.html.
+  echo Current folder: %CD%
+  pause & goto :eof
+)
 
 REM --- Find a Python: PATH first, then common Anaconda/Miniconda locations ---
 REM (double-clicking uses plain cmd, where conda's PATH is usually NOT active,
@@ -36,20 +36,20 @@ if not defined PY (
   echo.
   echo Could not find Python automatically.
   echo Open "Anaconda Prompt", cd to this folder, and run:
-  echo     python -m http.server 5144 --directory "%ROOT%"
+  echo     python -m http.server 5173 --directory "%ROOT%"
   echo.
   pause & goto :eof
 )
 
 echo.
-echo   Scriptura - local server
+echo   Weekly Focus - local server
 echo   Python:  %PY%
-echo   Serving: %ROOT%    Open: http://localhost:5144/
+echo   Serving: %ROOT%    Open: http://localhost:5173/
 echo   (Close this window to stop.)
 echo.
 
-start "" "http://localhost:5144/"
-"%PY%" -m http.server 5144 --directory "%ROOT%"
+start "" "http://localhost:5173/"
+"%PY%" -m http.server 5173 --directory "%ROOT%"
 
 echo.
 echo Server stopped.

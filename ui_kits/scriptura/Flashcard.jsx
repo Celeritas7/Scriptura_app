@@ -1,6 +1,6 @@
 // Flashcard — a 3D flip card. Front shows the prompt, back the answer +
 // the Burmese letter-name mnemonic. Click / tap to flip.
-function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, accent = 'var(--accent-quiz)', flipped, onFlip }) {
+function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, accent = 'var(--accent-quiz)', flipped, onFlip, font = 'var(--font-burmese)' }) {
   const [localFlip, setLocalFlip] = React.useState(false);
   const isFlipped = flipped != null ? flipped : localFlip;
   const flip = () => { onFlip ? onFlip(!isFlipped) : setLocalFlip((f) => !f); };
@@ -12,7 +12,7 @@ function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, acce
   };
 
   const promptText = front === 'roman' ? roman : char;
-  const promptFont = front === 'roman' ? 'var(--font-ui)' : 'var(--font-burmese)';
+  const promptFont = front === 'roman' ? 'var(--font-ui)' : font;
 
   return (
     <div onClick={flip} style={{ width: size, height: size, maxWidth: '100%', perspective: 1000, cursor: 'pointer' }}>
@@ -31,10 +31,10 @@ function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, acce
         </div>
         {/* BACK */}
         <div style={{ ...face, background: 'var(--bg-elevated)', transform: 'rotateY(180deg)' }}>
-          <div style={{ fontSize: '5rem', fontFamily: 'var(--font-burmese)', lineHeight: 1, color: 'var(--text-primary)' }}>{char}</div>
+          <div style={{ fontSize: '5rem', fontFamily: font, lineHeight: 1, color: 'var(--text-primary)' }}>{char}</div>
           <div style={{ marginTop: 'var(--space-4)', fontSize: 'var(--fs-lg)', color: accent, fontWeight: 600 }}>{roman}</div>
-          <div style={{ marginTop: 'var(--space-2)', fontFamily: 'var(--font-burmese)', fontSize: 'var(--fs-lg)', color: 'var(--text-primary)' }}>{name}</div>
-          <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{gloss}”</div>
+          {name && name !== roman && <div style={{ marginTop: 'var(--space-2)', fontFamily: font, fontSize: 'var(--fs-lg)', color: 'var(--text-primary)' }}>{name}</div>}
+          {gloss && <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{gloss}”</div>}
         </div>
       </div>
     </div>

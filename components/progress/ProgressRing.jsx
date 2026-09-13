@@ -11,13 +11,13 @@ const ACCENTS = {
  * progress arc is the accent hue, animated to its length.
  */
 export function ProgressRing({
-  value = 0, max = 100, size = 120, stroke = 10, accent = 'practice',
+  value = 0, max = 100, size = 120, stroke = 10, accent = 'practice', color: colorProp,
   label, sublabel, children, style,
 }) {
   const pct = Math.max(0, Math.min(1, max ? value / max : 0));
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
-  const color = ACCENTS[accent] || ACCENTS.practice;
+  const color = colorProp || ACCENTS[accent] || ACCENTS.practice;
 
   return (
     <div style={{ position: 'relative', width: size, height: size, ...style }}>

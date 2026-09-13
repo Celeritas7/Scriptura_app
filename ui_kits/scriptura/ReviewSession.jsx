@@ -60,7 +60,7 @@ function ReviewSession({ queue, onExit, onComplete, xpPerCard = 5 }) {
       </div>
 
       <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-6)' }}>
-        <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} front="char" accent="var(--accent-quiz)" flipped={flipped} onFlip={setFlipped} />
+        <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} font={c.font} front="char" accent="var(--accent-quiz)" flipped={flipped} onFlip={setFlipped} />
         {!flipped ? (
           <Button variant="secondary" onClick={() => setFlipped(true)}>Flip to check ↻</Button>
         ) : (

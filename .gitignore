@@ -2,7 +2,6 @@
 _ds_bundle.js
 _ds_manifest.json
 _adherence.oxlintrc.json
-sql/
 
 # OS / editor cruft
 .DS_Store

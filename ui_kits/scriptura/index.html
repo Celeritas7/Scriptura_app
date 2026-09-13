@@ -12,10 +12,39 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="../../_ds_bundle.js"></script>
 <script src="data.js"></script>
+<script>
+  // Preconfigured Supabase project for cloud sync (editable in Progress → Cloud sync).
+  window.SCRIPTURA_SUPABASE = {
+    url: 'https://wylxvmkcrexwfpjpbhyy.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak'
+  };
+</script>
+<script src="store.js"></script>
 <style>
-  html, body { margin: 0; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-ui); }
+  html, body { margin: 0; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-ui);
+    -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; touch-action: pan-x pan-y pinch-zoom;
+    -webkit-overflow-scrolling: touch; }
+  /* allow selection only inside real text fields, if any */
+  input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
   #root { min-height: 100vh; }
+  /* two-finger scroll hint over writing surfaces */
+  .scroll-hint { display: none; }
+  @media (pointer: coarse) { .scroll-hint { display: block; } }
   * { box-sizing: border-box; }
+  .sheet-grid { grid-template-columns: repeat(5, 1fr); }
+  .sheet-cell { transition: box-shadow .15s var(--ease); }
+  .sheet-cell:hover { box-shadow: inset 0 0 0 2px rgba(0,0,0,0.10); }
+  .sheet-clear { opacity: 0; transition: opacity .15s var(--ease); }
+  .sheet-cell:hover .sheet-clear { opacity: 1; }
+  @media (max-width: 760px) { .sheet-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 470px) { .sheet-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media print {
+    body * { visibility: hidden !important; }
+    #sheetPrintArea, #sheetPrintArea * { visibility: visible !important; }
+    #sheetPrintArea { position: absolute; left: 0; top: 0; width: 100%; }
+    .sheet-noprint { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -30,6 +59,7 @@
 </template>
 <div id="root"></div>
 <script type="text/babel" src="DrawCanvas.jsx"></script>
+<script type="text/babel" src="Ring.jsx"></script>
 <script type="text/babel" src="StrokeGlyph.jsx"></script>
 <script type="text/babel" src="Flashcard.jsx"></script>
 <script type="text/babel" src="LessonNode.jsx"></script>
@@ -38,6 +68,9 @@
 <script type="text/babel" src="LessonView.jsx"></script>
 <script type="text/babel" src="ReviewSession.jsx"></script>
 <script type="text/babel" src="WordBuilder.jsx"></script>
+<script type="text/babel" src="PracticeSheet.jsx"></script>
+<script type="text/babel" src="LanguageSelect.jsx"></script>
+<script type="text/babel" src="ProgressScreen.jsx"></script>
 <script type="text/babel" data-presets="react">
   const D = window.ScripturaData;
 
@@ -53,28 +86,55 @@
       '--shadow-card': '0 4px 18px rgba(20,20,40,0.10)' } },
   };
 
-  const seedLearned = ['က','ခ','ဂ','ဃ','င','စ','ဇ','ည'];
-
   function App() {
     const [theme, setTheme] = React.useState('midnight');
+    const [langId, setLangId] = React.useState(D.defaultLang);
     const [route, setRoute] = React.useState({ screen: 'home' });
-    const [learned, setLearned] = React.useState(() => new Set(seedLearned));
+    const [learnedByLang, setLearnedByLang] = React.useState(() => {
+      const m = {}; Object.keys(D.languages).forEach((id) => { m[id] = new Set((D.seed && D.seed[id]) || []); }); return m;
+    });
     const [profile, setProfile] = React.useState(() => ({ ...D.profile }));
-    const [queue] = React.useState(() => D.allChars.filter((c) => c.srs === 'due'));
+    const [isMobile, setIsMobile] = React.useState(() => window.matchMedia('(max-width: 700px)').matches);
+    React.useEffect(() => {
+      const mq = window.matchMedia('(max-width: 700px)');
+      const h = (e) => setIsMobile(e.matches);
+      mq.addEventListener('change', h); return () => mq.removeEventListener('change', h);
+    }, []);
+    const lang = D.languages[langId];
+    const learned = learnedByLang[langId];
+    const queue = lang.dueChars;
 
     const activeUnitId = React.useMemo(() => {
-      const u = D.units.find((u) => !u.chars.every((c) => learned.has(c.char)));
-      return (u || D.units[D.units.length - 1]).id;
-    }, [learned]);
+      const u = lang.units.find((u) => !u.chars.every((c) => learned.has(c.char)));
+      return (u || lang.units[lang.units.length - 1]).id;
+    }, [lang, learned]);
 
     const addXp = (xp) => setProfile((p) => ({ ...p, todayXp: p.todayXp + xp, levelXp: Math.min(p.levelMax, p.levelXp + xp) }));
 
     const go = (r) => setRoute(r);
 
     const finishLesson = (chars, xp) => {
-      setLearned((prev) => { const n = new Set(prev); chars.forEach((c) => n.add(c)); return n; });
+      setLearnedByLang((prev) => { const n = new Set(prev[langId]); chars.forEach((c) => n.add(c)); return { ...prev, [langId]: n }; });
       addXp(xp);
       setRoute({ screen: 'path' });
+    };
+
+    const switchLang = (id) => { setLangId(id); setRoute({ screen: 'home' }); pullStats(id); };
+
+    // --- cloud: pull accumulated stats for a language and merge locally ---
+    const [cloudStatus, setCloudStatus] = React.useState('off');
+    const pullStats = React.useCallback((id) => {
+      if (!(window.ScripturaCloud && window.ScripturaCloud.isConfigured())) { setCloudStatus('off'); return; }
+      window.ScripturaCloud.loadStats(id).then((m) => {
+        if (m) { window.ProgressStore.merge(id, m); setCloudStatus('on'); }
+        else setCloudStatus('error');
+      }).catch(() => setCloudStatus('error'));
+    }, []);
+    React.useEffect(() => { pullStats(langId); }, []); // eslint-disable-line
+
+    const onCloud = (action, id) => {
+      if (action === 'configured') { setCloudStatus('on'); pullStats(id); }
+      else if (action === 'pull') pullStats(id);
     };
 
     const { Button } = window.ScripturaDesignSystem_72b484;
@@ -84,9 +144,11 @@
       { id: 'home', label: 'Home', icon: '🏠' },
       { id: 'path', label: 'Path', icon: '🗺️' },
       { id: 'review', label: 'Review', icon: '🧠' },
+      { id: 'sheet', label: 'Sheet', icon: '🖋️' },
+      { id: 'progress', label: 'Progress', icon: '📊' },
       { id: 'build', label: 'Build', icon: '🧩' },
     ];
-    const navActive = { home: 'home', path: 'path', lesson: 'path', review: 'review', build: 'build' }[route.screen];
+    const navActive = { home: 'home', path: 'path', lesson: 'path', review: 'review', sheet: 'sheet', progress: 'progress', build: 'build' }[route.screen];
 
     const NavPill = ({ item }) => (
       <button type="button" onClick={() => go({ screen: item.id })}
@@ -100,16 +162,19 @@
     );
 
     let body;
-    if (route.screen === 'home') body = <window.Dashboard profile={profile} units={D.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} />;
-    else if (route.screen === 'path') body = <window.LessonPath units={D.units} learned={learned} activeUnitId={activeUnitId} onGo={go} />;
+    if (route.screen === 'home') body = <window.Dashboard profile={profile} units={lang.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} theme={D.themes[langId]} lang={lang} languageList={D.languageList} themes={D.themes} currentLang={langId} onPick={switchLang} />;
+    else if (route.screen === 'languages') body = <window.LanguageSelect languages={D.languages} languageList={D.languageList} learnedByLang={learnedByLang} current={langId} onPick={switchLang} themes={D.themes} />;
+    else if (route.screen === 'path') body = <window.LessonPath units={lang.units} learned={learned} activeUnitId={activeUnitId} langName={lang.name} onGo={go} />;
     else if (route.screen === 'lesson') {
-      const unit = D.units.find((u) => u.id === route.unitId);
+      const unit = lang.units.find((u) => u.id === route.unitId);
       body = <window.LessonView unit={unit} learned={learned} xpPerCard={profile.xpPerCard}
                 onComplete={finishLesson} onExit={() => go({ screen: 'path' })} />;
     }
     else if (route.screen === 'review') body = <window.ReviewSession queue={queue} xpPerCard={profile.xpPerCard}
                 onExit={() => go({ screen: 'home' })} onComplete={(xp) => { addXp(xp); go({ screen: 'home' }); }} />;
-    else if (route.screen === 'build') body = <window.WordBuilder />;
+    else if (route.screen === 'build') body = <window.WordBuilder lang={lang} />;
+    else if (route.screen === 'sheet') body = <window.PracticeSheet lang={lang} theme={D.themes[langId]} onSaved={(s) => { setCloudStatus(s); }} />;
+    else if (route.screen === 'progress') body = <window.ProgressScreen lang={lang} theme={D.themes[langId]} cloudStatus={cloudStatus} onCloud={onCloud} />;
 
     const themeVars = THEMES[theme].vars;
 
@@ -117,43 +182,100 @@
       <div style={{ minHeight: '100vh', ...themeVars, background: 'var(--bg-primary)', color: 'var(--text-primary)',
                     transition: 'background var(--dur-base) var(--ease)' }}>
         {/* APP BAR */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 'var(--space-5)',
-                      padding: 'var(--space-4) var(--space-6)', background: 'var(--bg-secondary)',
-                      borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
-          <div onClick={() => go({ screen: 'home' })} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center',
+                      gap: isMobile ? 'var(--space-3)' : 'var(--space-5)',
+                      padding: isMobile ? 'var(--space-3) var(--space-4)' : 'var(--space-4) var(--space-6)',
+                      background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)',
+                      flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
+          <div onClick={() => go({ screen: 'home' })} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', minWidth: 0 }}>
             <span style={{ fontSize: '1.4rem' }}>✍️</span>
-            <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)',
+            <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)', whiteSpace: 'nowrap',
                            background: 'var(--gradient-display)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Scriptura</span>
           </div>
-          <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-primary)', padding: 4, borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-color)' }}>
-            {navItems.map((it) => <NavPill key={it.id} item={it} />)}
-          </div>
+          {!isMobile && (
+            <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-primary)', padding: 4, borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-color)' }}>
+              {navItems.map((it) => <NavPill key={it.id} item={it} />)}
+            </div>
+          )}
           <div style={{ flex: 1 }} />
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.85rem',
+          <button type="button" onClick={() => go({ screen: 'home' })} title={lang.name}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.4rem 0.85rem',
+                     background: 'var(--bg-primary)',
+                     border: '1px solid var(--border-color)', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                     color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-small)' }}>
+            <span style={{ fontFamily: lang.font, fontSize: '1.1rem', lineHeight: 1 }}>{(D.themes[langId] && D.themes[langId].emblem) || lang.native.slice(0, 1)}</span>
+            {!isMobile && <span>{lang.name}</span>}
+          </button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: isMobile ? '0.4rem 0.6rem' : '0.4rem 0.85rem',
                          background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-pill)', fontSize: 'var(--fs-small)' }}>
             🔥 <b style={{ color: 'var(--accent-review)' }}>{profile.streak}</b></span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {Object.entries(THEMES).map(([k, t]) => (
-              <button key={k} type="button" title={t.label} onClick={() => setTheme(k)}
-                style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '1rem',
-                         background: theme === k ? 'var(--bg-elevated)' : 'transparent',
-                         border: `1px solid ${theme === k ? 'var(--text-secondary)' : 'var(--border-color)'}` }}>{t.icon}</button>
-            ))}
-          </div>
+          {isMobile ? (
+            <button type="button" title="Switch theme"
+              onClick={() => { const ks = Object.keys(THEMES); setTheme(ks[(ks.indexOf(theme) + 1) % ks.length]); }}
+              style={{ width: 34, height: 34, flex: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '1rem',
+                       background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>{THEMES[theme].icon}</button>
+          ) : (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {Object.entries(THEMES).map(([k, t]) => (
+                <button key={k} type="button" title={t.label} onClick={() => setTheme(k)}
+                  style={{ width: 34, height: 34, borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '1rem',
+                           background: theme === k ? 'var(--bg-elevated)' : 'transparent',
+                           border: `1px solid ${theme === k ? 'var(--text-secondary)' : 'var(--border-color)'}` }}>{t.icon}</button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* CONTENT */}
-        <div style={{ maxWidth: 920, margin: '0 auto', padding: 'var(--space-7) var(--space-6) var(--space-9)' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto',
+                      padding: isMobile ? 'var(--space-5) var(--space-4) calc(70px + env(safe-area-inset-bottom) + var(--space-6))' : 'var(--space-7) var(--space-6) var(--space-9)' }}>
           {body}
         </div>
+
+        {/* BOTTOM TAB BAR (mobile) */}
+        {isMobile && (
+          <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 30, display: 'flex',
+                        background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)',
+                        paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            {navItems.map((it) => (
+              <button key={it.id} type="button" onClick={() => go({ screen: it.id })}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 0,
+                         padding: '0.5rem 0 0.55rem', background: 'transparent', border: 'none', cursor: 'pointer',
+                         color: navActive === it.id ? 'var(--text-primary)' : 'var(--text-muted)',
+                         fontFamily: 'var(--font-ui)', fontSize: '0.65rem' }}>
+                <span style={{ fontSize: '1.15rem', lineHeight: 1, opacity: navActive === it.id ? 1 : 0.55 }}>{it.icon}</span>
+                <span style={{ fontWeight: navActive === it.id ? 700 : 500 }}>{it.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
-  function mount() {
-    const need = ['Dashboard','LessonPath','LessonView','ReviewSession','WordBuilder','DrawCanvas','StrokeGlyph','Flashcard','LessonNode'];
-    if (!window.ScripturaDesignSystem_72b484 || need.some((n) => !window[n])) return setTimeout(mount, 30);
+  // Optionally load content (languages/units/characters/vowels) from Supabase,
+  // falling back to the built-in data.js if offline or the fetch fails.
+  async function boot() {
+    try {
+      if (window.ScripturaCloud && window.ScripturaCloud.isConfigured()) {
+        const content = await Promise.race([
+          window.ScripturaCloud.loadContent(),
+          new Promise((r) => setTimeout(() => r(null), 6000)),
+        ]);
+        if (content && content.languageList && content.languageList.length) {
+          window.ScripturaData.languages = content.languages;
+          window.ScripturaData.languageList = content.languageList;
+          window.ScripturaData.__source = 'supabase';
+        }
+      }
+    } catch (e) { /* keep built-in data */ }
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  }
+
+  function mount() {
+    const need = ['Dashboard','LessonPath','LessonView','ReviewSession','WordBuilder','PracticeSheet','ProgressScreen','LanguageSelect','DrawCanvas','Ring','StrokeGlyph','Flashcard','LessonNode'];
+    if (!window.ScripturaDesignSystem_72b484 || need.some((n) => !window[n])) return setTimeout(mount, 30);
+    boot();
   }
   mount();
 </script>

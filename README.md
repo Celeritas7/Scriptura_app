@@ -132,7 +132,7 @@ All faces load from **Google Fonts** (`tokens/fonts.css`) — these are the *rea
 the product uses, so there is **no substitution**:
 
 - **Outfit** — all UI text.
-- **Noto Sans Myanmar / Devanagari / Telugu / JP / KR / SC** — native glyphs per script.
+- **Noto Sans Myanmar / Devanagari / Telugu / Sinhala / Tamil / JP / KR / SC** — native glyphs per script.
 
 > Note for the compiler: because the fonts arrive via a Google Fonts `@import` (not a
 > local `@font-face`), the design-system "Fonts" count reads 0. This is intentional —
