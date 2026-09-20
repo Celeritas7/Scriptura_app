@@ -88,8 +88,8 @@
   ];
 
   // ============================ HINDI ============================
-  const hindiFlat = 'क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह ळ क्ष ज्ञ'.split(' ')
-    .map((ch, i) => ({ char: ch, roman: 'ka kha ga gha ṅa ca cha ja jha ña ṭa ṭha ḍa ḍha ṇa ta tha da dha na pa pha ba bha ma ya ra la va śa ṣa sa ha ḷa kṣa jña'.split(' ')[i] }));
+  const hindiFlat = 'क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह'.split(' ')
+    .map((ch, i) => ({ char: ch, roman: 'ka kha ga gha ṅa ca cha ja jha ña ṭa ṭha ḍa ḍha ṇa ta tha da dha na pa pha ba bha ma ya ra la va śa ṣa sa ha'.split(' ')[i] }));
 
   // ============================ TELUGU ============================
   const teluguFlat = 'క ఖ గ ఘ ఙ చ ఛ జ ఝ ఞ ట ఠ డ ఢ ణ త థ ద ధ న ప ఫ బ భ మ య ర ల వ శ ష స హ ళ ఱ'.split(' ')
@@ -102,90 +102,6 @@
     { sign: 'ා', label: 'ā' }, { sign: 'ි', label: 'i' }, { sign: 'ී', label: 'ī' },
     { sign: 'ු', label: 'u' }, { sign: 'ූ', label: 'ū' }, { sign: 'ෙ', label: 'e' },
     { sign: 'ේ', label: 'ē' }, { sign: 'ො', label: 'o' },
-  ];
-
-  // ============================ TAMIL ============================
-  // 18 consonants in the traditional three-way grouping.
-  const TAM = f('tamil');
-  const tamilUnits = [
-    { id: 'uyir', title: 'Uyir', subtitle: 'Vowels · உயிர்', accent: 'practice', font: TAM, chars: [
-      { char: 'அ', roman: 'a', name: 'அ', gloss: 'vowel a', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஆ', roman: 'ā', name: 'ஆ', gloss: 'long ā', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'இ', roman: 'i', name: 'இ', gloss: 'i', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஈ', roman: 'ī', name: 'ஈ', gloss: 'long ī', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'உ', roman: 'u', name: 'உ', gloss: 'u', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஊ', roman: 'ū', name: 'ஊ', gloss: 'long ū', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'எ', roman: 'e', name: 'எ', gloss: 'e', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஏ', roman: 'ē', name: 'ஏ', gloss: 'long ē', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஐ', roman: 'ai', name: 'ஐ', gloss: 'ai', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஒ', roman: 'o', name: 'ஒ', gloss: 'o', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஓ', roman: 'ō', name: 'ஓ', gloss: 'long ō', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஔ', roman: 'au', name: 'ஔ', gloss: 'au', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-    ]},
-    { id: 'ka', title: 'Ka group', subtitle: 'Velar · க ங', accent: 'quiz', font: TAM,
-      chars: [
-        { char: 'க', roman: 'ka', name: 'க', gloss: 'ka · ga between vowels', cognate: 'क', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ங', roman: 'ṅa', name: 'ங', gloss: 'nga', cognate: 'ङ', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'ca', title: 'Ca group', subtitle: 'Palatal · ச ஞ', accent: 'sheet', font: TAM,
-      chars: [
-        { char: 'ச', roman: 'ca', name: 'ச', gloss: 'cha · sa at word start', cognate: 'च', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ஞ', roman: 'ña', name: 'ஞ', gloss: 'nya', cognate: 'ञ', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'tta', title: 'Ta group', subtitle: 'Retroflex · ட ண', accent: 'review', font: TAM,
-      chars: [
-        { char: 'ட', roman: 'ṭa', name: 'ட', gloss: 'retroflex ta · da between vowels', cognate: 'ट', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ண', roman: 'ṇa', name: 'ண', gloss: 'retroflex na', cognate: 'ण', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'ta', title: 'Ta group', subtitle: 'Dental · த ந', accent: 'indic', font: TAM,
-      chars: [
-        { char: 'த', roman: 'ta', name: 'த', gloss: 'dental ta · dha between vowels', cognate: 'त', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ந', roman: 'na', name: 'ந', gloss: 'dental na', cognate: 'न', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'pa', title: 'Pa group', subtitle: 'Labial · ப ம', accent: 'cjk', font: TAM,
-      chars: [
-        { char: 'ப', roman: 'pa', name: 'ப', gloss: 'pa · ba between vowels', cognate: 'प', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ம', roman: 'ma', name: 'ம', gloss: 'ma', cognate: 'म', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'ra', title: 'Ra group', subtitle: 'Alveolar · ற ன', accent: 'practice', font: TAM,
-      chars: [
-        { char: 'ற', roman: 'ṟa', name: 'ற', gloss: 'trilled ra · tra when doubled', cognate: '', font: TAM, mastery: 'new', srs: 'new' },
-        { char: 'ன', roman: 'ṉa', name: 'ன', gloss: 'alveolar na', cognate: '', font: TAM, mastery: 'new', srs: 'new' },
-      ],
-      // nasal sits in the Devanagari nasal column; the three middle cells stay blank
-      slots: [0, null, null, null, 1] },
-    { id: 'idaiyinam', title: 'Idaiyinam', subtitle: 'Semivowels & liquids · இடையினம்', accent: 'quiz', font: TAM, chars: [
-      { char: 'ய', roman: 'ya', name: 'ய', gloss: 'ya', cognate: 'य', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ர', roman: 'ra', name: 'ர', gloss: 'ra', cognate: 'र', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ல', roman: 'la', name: 'ல', gloss: 'la', cognate: 'ल', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'வ', roman: 'va', name: 'வ', gloss: 'va', cognate: 'व', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ழ', roman: 'ḻa', name: 'ழ', gloss: 'retroflex zha · unique to Tamil', cognate: '', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ள', roman: 'ḷa', name: 'ள', gloss: 'retroflex la', cognate: 'ळ', font: TAM, mastery: 'new', srs: 'new' },
-    ]},
-    { id: 'grantha', title: 'Grantha & Āytam', subtitle: 'Borrowed · கிரந்தம்', accent: 'indic', font: TAM, chars: [
-      { char: 'ஃ', roman: 'ḵ', name: 'ஆய்த எழுத்து', gloss: 'āytam · ஃப = f, ஃஜ = z', cognate: '', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-      { char: 'ஜ', roman: 'ja', name: 'ஜ', gloss: 'ja · loanwords only', cognate: 'ज', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ஷ', roman: 'ṣa', name: 'ஷ', gloss: 'retroflex sha', cognate: 'ष', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ஸ', roman: 'sa', name: 'ஸ', gloss: 'sibilant sa', cognate: 'स', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ஹ', roman: 'ha', name: 'ஹ', gloss: 'ha', cognate: 'ह', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'க்ஷ', roman: 'kṣa', name: 'க்ஷ', gloss: 'ksha · ligature', cognate: 'क्ष', font: TAM, mastery: 'new', srs: 'new' },
-      { char: 'ஸ்ரீ', roman: 'śrī', name: 'ஸ்ரீ', gloss: 'shri · ligature', cognate: 'श्री', font: TAM, mastery: 'new', srs: 'new', noVowelSign: true },
-    ]},
-  ];
-  const tamilVowels = [
-    { sign: 'ா', label: 'ā' }, { sign: 'ி', label: 'i' }, { sign: 'ீ', label: 'ī' },
-    { sign: 'ு', label: 'u' }, { sign: 'ூ', label: 'ū' }, { sign: 'ெ', label: 'e' },
-    { sign: 'ே', label: 'ē' }, { sign: 'ை', label: 'ai' }, { sign: 'ொ', label: 'o' }, { sign: 'ோ', label: 'ō' },
   ];
 
   // ============================ HIRAGANA / KATAKANA ============================
@@ -239,10 +155,9 @@
 
   const languages = {
     burmese: lang('burmese', 'Burmese', 'မြန်မာ', 'burmese', 'indic', burmeseUnits, burmeseVowels),
-    hindi: lang('hindi', 'Hindi', 'हिन्दी', 'devanagari', 'indic', makeUnits(hindiFlat, indicPlan(11), f('devanagari'))),
+    hindi: lang('hindi', 'Hindi', 'हिन्दी', 'devanagari', 'indic', makeUnits(hindiFlat, indicPlan(8), f('devanagari'))),
     telugu: lang('telugu', 'Telugu', 'తెలుగు', 'telugu', 'indic', makeUnits(teluguFlat, indicPlan(10), f('telugu'))),
     sinhala: lang('sinhala', 'Sinhala', 'සිංහල', 'sinhala', 'indic', makeUnits(sinhalaFlat, indicPlan(10), f('sinhala')), sinhalaVowels),
-    tamil: lang('tamil', 'Tamil', 'தமிழ்', 'tamil', 'indic', tamilUnits, tamilVowels),
     hiragana: lang('hiragana', 'Hiragana', 'ひらがな', 'japanese', 'cjk', makeUnits(hiraFlat, kanaPlan(['あ','か','さ','た','な','は','ま','や','ら','わ']), f('japanese'))),
     katakana: lang('katakana', 'Katakana', 'カタカナ', 'japanese', 'cjk', makeUnits(kataFlat, kanaPlan(['ア','カ','サ','タ','ナ','ハ','マ','ヤ','ラ','ワ']), f('japanese'))),
     korean: lang('korean', 'Korean', '한국어', 'korean', 'cjk', makeUnits(korFlat, korPlan, f('korean'))),
@@ -253,11 +168,9 @@
   // and a watermark glyph. Gives each script a distinct dashboard & card look.
   const themes = {
     burmese:  { color: '#f59e0b', color2: '#d97706', greeting: 'မင်္ဂလာပါ',  hello: 'Mingalaba',  emblem: '🛕', motif: 'က', blurb: 'Abugida · 33 consonants' },
-    hindi:    { color: '#ef4444', color2: '#b91c1c', greeting: 'नमस्ते',      hello: 'Namaste',    emblem: '🪔', motif: 'अ', blurb: 'Devanagari · 36 letters' },
+    hindi:    { color: '#ef4444', color2: '#b91c1c', greeting: 'नमस्ते',      hello: 'Namaste',    emblem: '🪔', motif: 'अ', blurb: 'Devanagari · 33 consonants' },
     telugu:   { color: '#22c55e', color2: '#15803d', greeting: 'నమస్కారం',   hello: 'Namaskaram', emblem: '🌾', motif: 'క', blurb: 'Abugida · 35 consonants' },
-    sinhala:  { color: '#14b8a6', color2: '#0f766e', greeting: 'ආයුබෝවන්', hello: 'Āyubōwan',  emblem: '🦚', motif: 'ස', blurb: 'Abugida · 35 consonants' },
-    tamil:    { color: '#8b5cf6', color2: '#6d28d9', greeting: 'வணக்கம்',    hello: 'Vaṇakkam',   emblem: '🪷', motif: 'அ', blurb: 'Abugida · 12 vowels + 18 consonants + Grantha' },
-    hiragana: { color: '#ec4899', color2: '#be185d', greeting: 'こんにちは',   hello: 'Konnichiwa', emblem: '🌸', motif: 'あ', blurb: 'Syllabary · 46 kana' },
+    sinhala:  { color: '#14b8a6', color2: '#0f766e', greeting: 'ආයුබෝවන්', hello: 'Āyubōwan',  emblem: '🦚', motif: 'ස', blurb: 'Abugida · 35 consonants' },    hiragana: { color: '#ec4899', color2: '#be185d', greeting: 'こんにちは',   hello: 'Konnichiwa', emblem: '🌸', motif: 'あ', blurb: 'Syllabary · 46 kana' },
     katakana: { color: '#6366f1', color2: '#4338ca', greeting: 'コンニチハ',   hello: 'Konnichiwa', emblem: '⛩️', motif: 'カ', blurb: 'Syllabary · 46 kana' },
     korean:   { color: '#3b82f6', color2: '#1d4ed8', greeting: '안녕하세요',   hello: 'Annyeong',   emblem: '☯',  motif: '한', blurb: 'Hangul · 19 consonants' },
     chinese:  { color: '#e11d48', color2: '#9f1239', greeting: '你好',         hello: 'Nǐ hǎo',     emblem: '🏮', motif: '汉', blurb: 'Logographic · starter set' },
@@ -271,7 +184,6 @@
       { id: 'hindi', name: 'Hindi', native: 'हिन्दी', font: f('devanagari'), group: 'Indic' },
       { id: 'telugu', name: 'Telugu', native: 'తెలుగు', font: f('telugu'), group: 'Indic' },
       { id: 'sinhala', name: 'Sinhala', native: 'සිංහල', font: f('sinhala'), group: 'Indic' },
-      { id: 'tamil', name: 'Tamil', native: 'தமிழ்', font: f('tamil'), group: 'Indic' },
       { id: 'hiragana', name: 'Hiragana', native: 'ひらがな', font: f('japanese'), group: 'CJK' },
       { id: 'katakana', name: 'Katakana', native: 'カタカナ', font: f('japanese'), group: 'CJK' },
       { id: 'korean', name: 'Korean', native: '한국어', font: f('korean'), group: 'CJK' },
