@@ -57,22 +57,6 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
     );
   };
 
-  const LangChip = ({ l }) => {
-    const lt = (themes && themes[l.id]) || { color: 'var(--accent-indic)', color2: 'var(--accent-indic-deep)', motif: '' };
-    const on = l.id === currentLang;
-    return (
-      <button type="button" onClick={() => onPick(l.id)} title={l.name}
-        style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, padding: '7px 13px 7px 8px', minHeight: 44, cursor: 'pointer',
-                 borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-small)', fontWeight: 700,
-                 border: `1px solid ${on ? 'transparent' : 'var(--border-color)'}`,
-                 background: on ? `linear-gradient(135deg, ${lt.color}, ${lt.color2})` : 'var(--bg-card)',
-                 color: on ? '#fff' : 'var(--text-secondary)' }}>
-        <span style={{ fontFamily: l.font, fontSize: '1.15rem', lineHeight: 1 }}>{lt.motif || l.native.slice(0, 1)}</span>
-        {l.name}
-      </button>
-    );
-  };
-
   const [pickerOpen, setPickerOpen] = React.useState(false);
   React.useEffect(() => {
     if (!pickerOpen) return;
@@ -156,8 +140,8 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-              <Button onClick={() => onGo({ screen: 'lesson', unitId: activeUnit.id })}
-                style={{ background: `linear-gradient(135deg, ${T.color}, ${T.color2})`, color: '#fff' }}>Continue lesson →</Button>
+              <Button onClick={() => onGo({ screen: 'lesson', unitId: activeUnit.id })} icon={<Icon name="arrow" size={16} />}
+                style={{ background: `linear-gradient(135deg, ${T.color}, ${T.color2})`, color: '#fff' }}>Continue lesson</Button>
               <span style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>{learnedCount} of {total} characters learned</span>
             </div>
           </div>
@@ -201,7 +185,7 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
             <Tool icon="pen" label="Practice sheet" desc="Write every character by hand" onClick={() => onGo({ screen: 'sheet' })} />
             {lang.vowels
               ? <Tool icon="build" label="Word builder" desc="Consonant + vowel sign" onClick={() => onGo({ screen: 'build' })} />
-              : <Tool icon="cards" label="Flashcards" desc="Flip & recall every character" onClick={() => onGo({ screen: 'review' })} />}
+              : <Tool icon="cards" label="Flashcards" desc="Flip & recall every character" onClick={() => onGo({ screen: 'flashcards' })} />}
             <Tool icon="map" label="Lesson path" desc={`${units.length} unit groups`} onClick={() => onGo({ screen: 'path' })} />
           </div>
         </div>
@@ -248,7 +232,7 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
           <span style={{ display: 'block', fontSize: 'var(--fs-hint)', color: 'var(--text-secondary)' }}>{groupOf(lang)} · {learnedCount}/{total} learned · tap to switch</span>
         </span>
         <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: '.85rem', fontWeight: 700, color: '#fff',
-                       background: `linear-gradient(135deg, ${T.color}, ${T.color2})`, flexShrink: 0 }}>⌃</span>
+                       background: `linear-gradient(135deg, ${T.color}, ${T.color2})`, flexShrink: 0 }}><Icon name="chevron" size={16} style={{ transform: 'rotate(-90deg)' }} /></span>
       </button>
     </div>
 

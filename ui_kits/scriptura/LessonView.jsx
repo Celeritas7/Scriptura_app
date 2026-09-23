@@ -1,41 +1,62 @@
-// LessonView — the focused study loop for one unit. Each character runs
-// Learn (watch it form + mnemonic) → Trace (write it) → Quiz (recall & flip).
-// Correct recalls mark the character learned and award XP.
-function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
+// LessonView — the focused study loop for one unit. A unit with a `concept`
+// opens with a read-once explainer, then each character runs
+// Learn (watch it form + mnemonic) → Trace (write it, scored) → Quiz (recall & flip).
+// Correct recalls mark the character learned, award XP, and grade into the SRS.
+function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5, langId }) {
   const { Card, Button, NavButton } = window.ScripturaDesignSystem_72b484;
+  const SRS = window.ScripturaSRS, Trace = window.ScripturaTrace;
   const accent = `var(--accent-${unit.accent})`;
+  const hasConcept = !!(unit.concept && unit.concept.positions);
   const steps = ['learn', 'trace', 'quiz'];
   const [ci, setCi] = React.useState(0);
-  const [step, setStep] = React.useState('learn');
+  const [step, setStep] = React.useState(hasConcept ? 'concept' : 'learn');
   const [flipped, setFlipped] = React.useState(false);
   const [xp, setXp] = React.useState(0);
   const [got, setGot] = React.useState(() => new Set());
   const [finished, setFinished] = React.useState(false);
+  const [traceFb, setTraceFb] = React.useState(null); // { score, verdict, hint }
   const cv = React.useRef(null);
   const c = unit.chars[ci];
   const totalSteps = unit.chars.length * steps.length;
-  const doneSteps = ci * steps.length + steps.indexOf(step);
+  const doneSteps = step === 'concept' ? 0 : ci * steps.length + steps.indexOf(step);
+  // global index of this char within the language, for SRS keys
+  const baseIdx = unit.startIndex || 0;
 
   const advance = (learnedThis) => {
     if (learnedThis) { setGot((g) => new Set(g).add(c.char)); setXp((x) => x + xpPerCard); }
-    setFlipped(false);
+    if (SRS && langId) SRS.grade(langId, baseIdx + ci, !!learnedThis, traceFb ? traceFb.score : undefined);
+    setFlipped(false); setTraceFb(null);
     if (ci + 1 >= unit.chars.length) { setFinished(true); return; }
     setCi(ci + 1); setStep('learn');
   };
 
+  // Score the traced glyph against the real one. Reads the stroke log DrawCanvas
+  // parks on its canvas element; if that is unavailable we simply advance
+  // without feedback rather than blocking the lesson.
+  const checkTrace = () => {
+    const el = cv.current;
+    const strokes = el && el.__getStrokes && el.__getStrokes();
+    if (!Trace || !el || !strokes || !strokes.length) { setStep('quiz'); return; }
+    // DrawCanvas logs points in canvas pixel space — score against that box
+    const fb = Trace.score(strokes, c.char, unit.font, el.width, el.height);
+    if (!fb) { setStep('quiz'); return; }
+    setTraceFb(fb);
+  };
+
   if (finished) {
+    const Stat = ({ n, label, color }) => (
+      <div><div style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color }}>{n}</div>
+        <div style={{ fontSize: 'var(--fs-hint)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{label}</div></div>
+    );
     return (
-      <Card style={{ textAlign: 'center', padding: 'var(--space-9) var(--space-7)' }}>
-        <div style={{ fontSize: '3.5rem' }}>🎉</div>
-        <div style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, marginTop: 'var(--space-4)' }}>{unit.title} complete!</div>
-        <div style={{ display: 'flex', gap: 'var(--space-6)', justifyContent: 'center', margin: 'var(--space-7) 0' }}>
-          <div><div style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: accent }}>+{xp}</div>
-            <div style={{ fontSize: 'var(--fs-hint)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>XP earned</div></div>
-          <div><div style={{ fontSize: 'var(--fs-h2)', fontWeight: 700, color: 'var(--accent-practice)' }}>{got.size}</div>
-            <div style={{ fontSize: 'var(--fs-hint)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>learned</div></div>
+      <window.EmptyState icon="award" accent={accent} title={`${unit.title} complete`}
+        body="Letters you got right are scheduled for review tomorrow; the rest come back today."
+        action={{ label: 'Back to path', icon: 'arrow', accent: unit.accent, onClick: () => onComplete([...got], xp) }}>
+        <div style={{ display: 'flex', gap: 'var(--space-7)', justifyContent: 'center', marginTop: 'var(--space-4)' }}>
+          <Stat n={`+${xp}`} label="XP earned" color={accent} />
+          <Stat n={got.size} label="learned" color="var(--accent-practice)" />
         </div>
-        <Button accent={unit.accent} onClick={() => onComplete([...got], xp)}>Back to path →</Button>
-      </Card>
+      </window.EmptyState>
     );
   }
 
@@ -45,7 +66,8 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-5)' }}>
         <button type="button" onClick={onExit} aria-label="Exit lesson"
           style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
-                   width: 40, height: 40, borderRadius: 'var(--radius-full)', cursor: 'pointer', fontSize: '1.1rem', flexShrink: 0 }}>✕</button>
+                   width: 44, height: 44, borderRadius: 'var(--radius-full)', cursor: 'pointer', flexShrink: 0,
+                   display: 'grid', placeItems: 'center' }}><window.Icon name="x" size={18} /></button>
         <div style={{ flex: 1, height: 12, borderRadius: 'var(--radius-full)', background: 'var(--bg-secondary)',
                       border: '1px solid var(--border-color)', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(doneSteps / totalSteps) * 100}%`, background: accent,
@@ -56,7 +78,7 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
 
       {/* step chips */}
       <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center' }}>
-        {steps.map((s) => (
+        {(hasConcept ? ['concept'].concat(steps) : steps).map((s) => (
           <span key={s} style={{ fontSize: 'var(--fs-micro)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-tight)',
             padding: '0.3rem 0.9rem', borderRadius: 'var(--radius-pill)',
             background: s === step ? accent : 'var(--bg-secondary)',
@@ -65,6 +87,10 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
       </div>
 
       {/* STEP BODY */}
+      {step === 'concept' && (
+        <window.ConceptCard concept={unit.concept} accent={unit.accent} font={unit.font}
+          onDone={() => setStep('learn')} doneLabel={`Got it — start ${unit.title}`} />
+      )}
       {step === 'learn' && (
         <Card style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
           <window.StrokeGlyph char={c.char} accent={accent} size={220} font={unit.font} />
@@ -78,7 +104,7 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
             </div>
             )}
             <div style={{ marginTop: 'var(--space-6)' }}>
-              <Button accent={unit.accent} onClick={() => setStep('trace')}>I've got it →</Button>
+              <Button accent={unit.accent} icon={<window.Icon name="arrow" size={16} />} onClick={() => setStep('trace')}>I've got it</Button>
             </div>
           </div>
         </Card>
@@ -92,10 +118,26 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
           <div ref={(el) => { cv.current = el && el.querySelector('canvas'); }}>
             <window.DrawCanvas guide={c.char} guideFont={unit.font} showGuide={true} stroke={8} size={340} accent={accent} />
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', marginTop: 'var(--space-6)' }}>
-            <Button variant="secondary" onClick={() => cv.current && cv.current.__clear && cv.current.__clear()}>🗑 Clear</Button>
-            <Button accent={unit.accent} icon="✓" onClick={() => setStep('quiz')}>Done →</Button>
+          <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
+            <Button variant="secondary" icon={<window.Icon name="eraser" size={16} />} onClick={() => { setTraceFb(null); cv.current && cv.current.__clear && cv.current.__clear(); }}>Clear</Button>
+            {!traceFb
+              ? <Button accent={unit.accent} icon={<window.Icon name="check" size={16} />} onClick={checkTrace}>Check my trace</Button>
+              : <Button accent={unit.accent} icon={<window.Icon name="arrow" size={16} />} onClick={() => setStep('quiz')}>Continue</Button>}
+            {!traceFb && <Button variant="secondary" onClick={() => setStep('quiz')}>Skip</Button>}
           </div>
+          {traceFb && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-5)', marginTop: 'var(--space-5)', padding: 'var(--space-5)',
+                          borderRadius: 'var(--radius-lg, 14px)', background: 'var(--bg-secondary)',
+                          border: `1px solid ${Trace.color(traceFb.score)}` }}>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: Trace.color(traceFb.score), fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{traceFb.score}<span style={{ fontSize: '1rem' }}>%</span></div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--fs-small)', fontWeight: 600, textWrap: 'pretty' }}>{traceFb.hint}</div>
+                <div style={{ fontSize: 'var(--fs-hint)', color: 'var(--text-secondary)', marginTop: 2 }}>
+                  {traceFb.coverage}% of the letter covered · {traceFb.precision}% of your ink on it
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
@@ -104,11 +146,11 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5 }) {
           <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-small)' }}>Recall the character for this sound, then flip to check.</div>
           <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} font={unit.font} front="roman" accent={accent} flipped={flipped} onFlip={setFlipped} />
           {!flipped ? (
-            <Button variant="secondary" onClick={() => setFlipped(true)}>Flip to check ↻</Button>
+            <Button variant="secondary" icon={<window.Icon name="review" size={16} />} onClick={() => setFlipped(true)}>Flip to check</Button>
           ) : (
             <div style={{ display: 'flex', gap: 'var(--space-5)' }}>
-              <Button accent="danger" variant="secondary" onClick={() => advance(false)}>↻ Again</Button>
-              <Button accent="practice" icon="✓" onClick={() => advance(true)}>Got it · +{xpPerCard}</Button>
+              <Button accent="danger" variant="secondary" icon={<window.Icon name="review" size={16} />} onClick={() => advance(false)}>Again</Button>
+              <Button accent="practice" icon={<window.Icon name="check" size={16} />} onClick={() => advance(true)}>Got it · +{xpPerCard}</Button>
             </div>
           )}
         </Card>

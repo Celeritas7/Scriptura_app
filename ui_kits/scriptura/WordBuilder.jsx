@@ -2,17 +2,15 @@
 // live Burmese syllable with its romanization. A playful, exploratory mode.
 function WordBuilder({ lang }) {
   const { Card } = window.ScripturaDesignSystem_72b484;
-  const consonants = lang.allChars;
+  // Only consonants take vowel signs: skip independent vowels, āytam, and pre-composed ligatures.
+  const consonants = (lang.allChars || []).filter((c) => !c.noVowelSign);
   const [ci, setCi] = React.useState(0);
   const [vi, setVi] = React.useState(0);
 
   if (!lang.vowels) {
     return (
-      <Card style={{ textAlign: 'center', padding: 'var(--space-9) var(--space-7)', color: 'var(--text-secondary)' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>🧩</div>
-        <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--text-primary)' }}>Word Builder isn't set up for {lang.name} yet</div>
-        <div style={{ marginTop: 'var(--space-3)' }}>Vowel-sign combining is currently available for Burmese. Switch language from the top bar to try it.</div>
-      </Card>
+      <window.EmptyState icon="build" title={`Word builder isn't set up for ${lang.name} yet`}
+        body="Vowel-sign combining is available for scripts that attach vowels to consonants. Pick one of those, or keep practising letters here." />
     );
   }
 

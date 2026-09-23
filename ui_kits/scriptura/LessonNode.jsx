@@ -20,14 +20,14 @@ function LessonNode({ unit, learned, total, status, onClick }) {
         <ProgressRing value={done ? total : learned} max={total} size={76} stroke={7} accent={unit.accent}>
           <span style={{ fontFamily: unit.font || 'var(--font-burmese)', fontSize: '2rem', lineHeight: 1,
                          color: locked ? 'var(--text-muted)' : 'var(--text-primary)' }}>
-            {locked ? '🔒' : unit.chars[0].char}
+            {locked ? <window.Icon name="lock" size={24} /> : unit.chars[0].char}
           </span>
         </ProgressRing>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: 'var(--text-primary)' }}>{unit.title}</span>
-          {done && <span style={{ color: accent, fontSize: 'var(--fs-body)' }}>✓</span>}
+          {done && <span style={{ color: accent, display: 'inline-flex' }}><window.Icon name="check" size={18} /></span>}
         </div>
         <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontFamily: unit.font || 'var(--font-burmese)' }}>{unit.subtitle}</div>
         <div style={{ marginTop: 6, fontSize: 'var(--fs-micro)', color: locked ? 'var(--text-muted)' : accent, fontWeight: 600 }}>
@@ -35,7 +35,7 @@ function LessonNode({ unit, learned, total, status, onClick }) {
         </div>
       </div>
       {!locked && (
-        <span style={{ flexShrink: 0, fontSize: '1.3rem', color: 'var(--text-secondary)' }}>›</span>
+        <span style={{ flexShrink: 0, color: 'var(--text-secondary)', display: 'inline-flex' }}><window.Icon name="chevron" size={22} /></span>
       )}
     </button>
   );

@@ -33,7 +33,7 @@ function StrokeGlyph({ char, size = 220, accent = 'var(--accent-practice)', auto
         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.1rem',
                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
                  borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-small)', cursor: 'pointer' }}>
-        ↻ Replay
+        <window.Icon name="review" size={15} /> Replay
       </button>
     </div>
   );

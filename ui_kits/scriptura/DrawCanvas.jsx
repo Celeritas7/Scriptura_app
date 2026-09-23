@@ -121,6 +121,9 @@ function DrawCanvas({ guide, guideFont, showGuide = true, stroke = 8, size = 360
     const node = canvasRef.current;
     node.__clear = () => { strokes.current = []; redraw(); };
     node.__undo = () => { strokes.current.pop(); redraw(); };
+    // read-only stroke log for trace scoring (points are in CANVAS pixel space,
+    // so a scorer must measure against node.width/height, not the CSS box)
+    node.__getStrokes = () => strokes.current;
   }, [redraw]);
 
   return (

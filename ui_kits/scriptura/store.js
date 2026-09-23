@@ -33,7 +33,7 @@
     save(lang, stats) { try { localStorage.setItem(this.key(lang), JSON.stringify(stats)); } catch (e) {} },
 
     // Record one full pass of a practice sheet. marks = { [idx]: 'wrong' }.
-    // Unmarked cells count as correct (the app's "mark only mistakes" model).
+    // Unmarked cells count as correct (the app's original "mark only mistakes" model).
     recordPass(lang, total, marks) {
       const s = this.load(lang);
       for (let i = 0; i < total; i++) {
@@ -41,6 +41,22 @@
         if (marks[i] === 'wrong') cur.w++; else cur.c++;
         s[i] = cur;
       }
+      this.save(lang, s);
+      return s;
+    },
+
+    // Record only explicitly rated cells. marks = { [idx]: 'mastered'|'learning'|'new' }.
+    // 'mastered' → correct, 'learning' → wrong, 'new' and absent → no attempt.
+    // Used by the 3-state sheet, where an untouched cell must stay untouched.
+    recordRated(lang, marks) {
+      const s = this.load(lang);
+      Object.keys(marks || {}).forEach((k) => {
+        const state = marks[k];
+        if (state !== 'mastered' && state !== 'learning') return;
+        const cur = s[k] || { c: 0, w: 0 };
+        if (state === 'mastered') cur.c++; else cur.w++;
+        s[k] = cur;
+      });
       this.save(lang, s);
       return s;
     },
@@ -143,22 +159,33 @@
         cl.from('scriptura_app_vowels').select('*').order('sort'),
       ]);
       if (L.error || !L.data || !L.data.length) return null;
+      // Local catalogue, used to fill anything the cloud rows don't carry yet
+      // (a project seeded before the slots / concept / no_vowel_sign columns).
+      const local = (window.ScripturaData && window.ScripturaData.languages) || {};
       const languages = {}, languageList = [];
       L.data.forEach((l) => {
         languageList.push({ id: l.id, name: l.name, native: l.native, font: l.font, group: l.grp });
-        const units = (U.data || []).filter((u) => u.language_id === l.id).map((u) => ({
-          id: String(u.id).replace(l.id + '_', ''), _full: u.id, title: u.title,
-          subtitle: u.subtitle, accent: u.accent, font: l.font, chars: [],
-        }));
+        const loc = local[l.id] || { units: [], allChars: [] };
+        const units = (U.data || []).filter((u) => u.language_id === l.id).map((u) => {
+          const id = String(u.id).replace(l.id + '_', '');
+          const lu = loc.units.find((x) => x.id === id) || {};
+          return { id, _full: u.id, title: u.title, subtitle: u.subtitle, accent: u.accent, font: l.font, chars: [],
+            slots: u.slots || lu.slots, concept: u.concept || lu.concept };
+        });
         const byFull = {}; units.forEach((u) => { byFull[u._full] = u; });
         const allChars = [];
         (C.data || []).filter((c) => c.language_id === l.id).forEach((c) => {
           const u = byFull[c.unit_id];
+          const lc = loc.allChars.find((x) => x.char === c.char) || {};
           const obj = { char: c.char, roman: c.roman, name: c.name || c.roman, gloss: c.gloss || '',
-                        cognate: c.cognate || '', font: l.font, mastery: 'new', srs: 'new' };
+                        cognate: c.cognate || '', font: l.font,
+                        noVowelSign: c.no_vowel_sign != null ? !!c.no_vowel_sign : !!lc.noVowelSign };
           if (u) u.chars.push(obj);
           allChars.push({ ...obj, unitId: u ? u.id : null, unitTitle: u ? u.title : '', accent: u ? u.accent : 'indic' });
         });
+        // language-wide index of each unit's first character — the SRS and
+        // stats stores key on it (see data.js)
+        let at = 0; units.forEach((u) => { u.startIndex = at; at += u.chars.length; });
         const vowels = (V.data || []).filter((v) => v.language_id === l.id).map((v) => ({ sign: v.sign, label: v.label, name: v.name }));
         languages[l.id] = { id: l.id, name: l.name, native: l.native, group: l.grp, font: l.font,
           units: units.map(({ _full, ...u }) => u), vowels: vowels.length ? vowels : null, allChars, dueChars: [] };

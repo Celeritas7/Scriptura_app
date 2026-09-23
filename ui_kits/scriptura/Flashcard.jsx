@@ -27,7 +27,7 @@ function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, acce
           </div>
           <div style={{ fontSize: front === 'roman' ? '3.4rem' : '5rem', fontFamily: promptFont,
                         fontWeight: front === 'roman' ? 700 : 400, color: accent, lineHeight: 1 }}>{promptText}</div>
-          <div style={{ marginTop: 'var(--space-5)', fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>Tap to reveal ↻</div>
+          <div style={{ marginTop: 'var(--space-5)', fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>Tap to reveal</div>
         </div>
         {/* BACK */}
         <div style={{ ...face, background: 'var(--bg-elevated)', transform: 'rotateY(180deg)' }}>

@@ -20,6 +20,8 @@
   };
 </script>
 <script src="store.js"></script>
+<script src="srs.js"></script>
+<script src="trace.js"></script>
 <style>
   html, body { margin: 0; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-ui);
     -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-touch-callout: none;
@@ -39,8 +41,27 @@
   .sheet-focus-row .sheet-cell, .sheet-focus-row .sheet-blank { min-height: 180px; }
   .sheet-cell { transition: box-shadow .15s var(--ease); }
   .sheet-cell:hover { box-shadow: inset 0 0 0 2px rgba(0,0,0,0.10); }
-  .sheet-clear { opacity: 0; transition: opacity .15s var(--ease); }
+  /* Cell tools. Clear is destructive and hides until hover on precise pointers;
+     Check is the affordance the header tells users to tap, so it is always
+     visible. On touch both are always shown at a 44px target. */
+  .sheet-clear { width: 26px; height: 26px; opacity: 0; transition: opacity .15s var(--ease); }
   .sheet-cell:hover .sheet-clear { opacity: 1; }
+  .sheet-check { height: 26px; padding: 0 10px; }
+  .sheet-mastery { min-width: 26px; height: 26px; padding: 0 6px; font-size: 12px; }
+  @media (pointer: coarse) {
+    .sheet-clear { opacity: 1; width: 44px; height: 44px; font-size: 18px; }
+    .sheet-check { height: 44px; padding: 0 16px; font-size: 13px; }
+    .sheet-mastery { min-width: 44px; height: 44px; padding: 0 12px; font-size: 16px; }
+  }
+  .sheet-focus-row .sheet-clear { opacity: 1; width: 44px; height: 44px; font-size: 18px; }
+  .sheet-focus-row .sheet-check { height: 44px; padding: 0 16px; font-size: 13px; }
+  .sheet-focus-row .sheet-mastery { min-width: 44px; height: 44px; padding: 0 12px; font-size: 16px; }
+  .focus-foot { display: grid; align-items: center; gap: 12px 16px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-areas: "prev tools dots next"; }
+  @media (max-width: 640px) {
+    .focus-foot { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "tools tools tools" "prev dots next"; }
+  }
+  @keyframes cc-pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @media (max-width: 760px) { .sheet-grid { grid-template-columns: repeat(3, 1fr); } .sheet-blank { display: none; }
     .sheet-cell { min-height: 175px; } .sheet-ghost { font-size: 4.4rem; } .sheet-focus-row { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 470px) { .sheet-grid { grid-template-columns: repeat(2, 1fr); } .sheet-cell { min-height: 200px; } .sheet-ghost { font-size: 5.2rem; }
@@ -130,6 +151,7 @@
 <script type="text/babel" src="Ring.jsx"></script>
 <script type="text/babel" src="StrokeGlyph.jsx"></script>
 <script type="text/babel" src="Flashcard.jsx"></script>
+<script type="text/babel" src="ConceptCard.jsx"></script>
 <script type="text/babel" src="LessonNode.jsx"></script>
 <script type="text/babel" src="Dashboard.jsx"></script>
 <script type="text/babel" src="LessonPath.jsx"></script>
@@ -137,7 +159,6 @@
 <script type="text/babel" src="ReviewSession.jsx"></script>
 <script type="text/babel" src="WordBuilder.jsx"></script>
 <script type="text/babel" src="PracticeSheet.jsx"></script>
-<script type="text/babel" src="LanguageSelect.jsx"></script>
 <script type="text/babel" src="ProgressScreen.jsx"></script>
 <script type="text/babel" data-presets="react">
   const D = window.ScripturaData;
@@ -164,7 +185,31 @@
     const [profile, setProfile] = React.useState(() => ({ ...D.profile }));
     const lang = D.languages[langId];
     const learned = learnedByLang[langId];
-    const queue = lang.dueChars;
+    // Review queue comes from the Leitner boxes (localStorage), falling back to
+    // the seeded `srs: 'due'` characters until the learner has any real history.
+    const [srsRev, setSrsRev] = React.useState(0);
+    const queue = React.useMemo(() => {
+      const S = window.ScripturaSRS;
+      if (!S) return lang.dueChars;
+      S.migrateFrom(langId, window.ProgressStore.load(langId));
+      const idx = S.dueList(langId, lang.allChars.length);
+      // carry the language-wide index on each card so grading can write back
+      if (idx.length) return idx.map((i) => (lang.allChars[i] ? { ...lang.allChars[i], _i: i, font: lang.allChars[i].font || lang.font } : null)).filter(Boolean);
+      // The seeded `srs: 'due'` characters are a demo queue for a language the
+      // learner has never touched. Gate on ABSENCE OF HISTORY, not on "nothing
+      // due" — otherwise a real schedule with nothing due today gets replaced by
+      // demo cards, inflating the due count and grading characters the
+      // scheduler deliberately pushed out.
+      const hasHistory = Object.keys(S.load(langId)).length > 0;
+      if (hasHistory) return [];
+      return lang.dueChars.map((c) => ({ ...c, _i: lang.allChars.indexOf(c) }));
+    }, [lang, langId, srsRev]);
+    // Flashcard deck: every character, shuffled once per language visit
+    const flashDeck = React.useMemo(() => {
+      const d = lang.allChars.map((c, i) => ({ ...c, _i: i, font: c.font || lang.font }));
+      for (let k = d.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [d[k], d[j]] = [d[j], d[k]]; }
+      return d;
+    }, [lang, route.screen === 'flashcards']);
 
     const activeUnitId = React.useMemo(() => {
       const u = lang.units.find((u) => !u.chars.every((c) => learned.has(c.char)));
@@ -178,6 +223,7 @@
     const finishLesson = (chars, xp) => {
       setLearnedByLang((prev) => { const n = new Set(prev[langId]); chars.forEach((c) => n.add(c)); return { ...prev, [langId]: n }; });
       addXp(xp);
+      setSrsRev((r) => r + 1); // lesson graded into the Leitner boxes
       setRoute({ screen: 'path' });
     };
 
@@ -210,9 +256,9 @@
       { id: 'progress', label: 'Progress', icon: 'chart' },
       { id: 'build', label: 'Build', icon: 'build' },
     ];
-    const navActive = { home: 'home', path: 'path', lesson: 'path', review: 'review', sheet: 'sheet', progress: 'progress', build: 'build' }[route.screen];
+    const navActive = { home: 'home', path: 'path', lesson: 'path', review: 'review', flashcards: 'review', sheet: 'sheet', progress: 'progress', build: 'build' }[route.screen];
     // Lesson and Review own the whole viewport — their own ✕ + progress row is enough chrome.
-    const immersive = route.screen === 'lesson' || route.screen === 'review';
+    const immersive = route.screen === 'lesson' || route.screen === 'review' || route.screen === 'flashcards';
     const tabItems = navItems.filter((i) => ['home', 'path', 'review', 'progress'].includes(i.id));
 
     const NavPill = ({ item }) => (
@@ -228,18 +274,20 @@
 
     let body;
     if (route.screen === 'home') body = <window.Dashboard profile={profile} units={lang.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} theme={D.themes[langId]} lang={lang} languageList={D.languageList} themes={D.themes} currentLang={langId} onPick={switchLang} />;
-    else if (route.screen === 'languages') body = <window.LanguageSelect languages={D.languages} languageList={D.languageList} learnedByLang={learnedByLang} current={langId} onPick={switchLang} themes={D.themes} />;
-    else if (route.screen === 'path') body = <window.LessonPath units={lang.units} learned={learned} activeUnitId={activeUnitId} langName={lang.name} onGo={go} />;
+    else if (route.screen === 'path') body = <window.LessonPath units={lang.units} learned={learned} activeUnitId={activeUnitId} langName={lang.name} theme={D.themes[langId]} onGo={go} />;
     else if (route.screen === 'lesson') {
       const unit = lang.units.find((u) => u.id === route.unitId);
-      body = <window.LessonView unit={unit} learned={learned} xpPerCard={profile.xpPerCard}
+      body = <window.LessonView unit={unit} learned={learned} xpPerCard={profile.xpPerCard} langId={langId}
                 onComplete={finishLesson} onExit={() => go({ screen: 'path' })} />;
     }
-    else if (route.screen === 'review') body = <window.ReviewSession queue={queue} xpPerCard={profile.xpPerCard}
-                onExit={() => go({ screen: 'home' })} onComplete={(xp) => { addXp(xp); go({ screen: 'home' }); }} />;
+    else if (route.screen === 'review') body = <window.ReviewSession queue={queue} xpPerCard={profile.xpPerCard} langId={langId} allChars={lang.allChars} onGo={go}
+                onExit={() => go({ screen: 'home' })} onComplete={(xp) => { addXp(xp); setSrsRev((r) => r + 1); go({ screen: 'home' }); }} />;
+    // Flashcards: every character, shuffled, practice only (never touches the schedule)
+    else if (route.screen === 'flashcards') body = <window.ReviewSession key={'fc' + langId} mode="practice" langId={langId} allChars={lang.allChars}
+                queue={flashDeck} onExit={() => go({ screen: 'home' })} onComplete={() => go({ screen: 'home' })} />;
     else if (route.screen === 'build') body = <window.WordBuilder lang={lang} />;
-    else if (route.screen === 'sheet') body = <window.PracticeSheet lang={lang} theme={D.themes[langId]} onSaved={(s) => { setCloudStatus(s); }} />;
-    else if (route.screen === 'progress') body = <window.ProgressScreen lang={lang} theme={D.themes[langId]} cloudStatus={cloudStatus} onCloud={onCloud} />;
+    else if (route.screen === 'sheet') body = <window.PracticeSheet lang={lang} theme={D.themes[langId]} onSaved={(s) => { setCloudStatus(s); setSrsRev((r) => r + 1); }} />;
+    else if (route.screen === 'progress') body = <window.ProgressScreen lang={lang} theme={D.themes[langId]} cloudStatus={cloudStatus} onCloud={onCloud} onGo={go} key={'pr' + srsRev} />;
 
     const themeVars = THEMES[theme].vars;
 
@@ -342,7 +390,7 @@
   }
 
   function mount() {
-    const need = ['Dashboard','LessonPath','LessonView','ReviewSession','WordBuilder','PracticeSheet','ProgressScreen','LanguageSelect','DrawCanvas','Ring','StrokeGlyph','Flashcard','LessonNode','Icon'];
+    const need = ['Dashboard','LessonPath','LessonView','ReviewSession','WordBuilder','PracticeSheet','ProgressScreen','DrawCanvas','Ring','StrokeGlyph','Flashcard','LessonNode','Icon'];
     if (!window.ScripturaDesignSystem_72b484 || need.some((n) => !window[n])) return setTimeout(mount, 30);
     boot();
   }
