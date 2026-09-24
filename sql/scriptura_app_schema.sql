@@ -66,12 +66,17 @@ alter table scriptura_app_characters enable row level security;
 alter table scriptura_app_vowels     enable row level security;
 alter table scriptura_app_sheet_stats enable row level security;
 
+drop policy if exists "read languages" on scriptura_app_languages;
 create policy "read languages"  on scriptura_app_languages  for select using (true);
+drop policy if exists "read units" on scriptura_app_units;
 create policy "read units"      on scriptura_app_units      for select using (true);
+drop policy if exists "read characters" on scriptura_app_characters;
 create policy "read characters" on scriptura_app_characters for select using (true);
+drop policy if exists "read vowels" on scriptura_app_vowels;
 create policy "read vowels"     on scriptura_app_vowels     for select using (true);
--- Demo policy: anyone with the anon key can read/write progress. For real
--- multi-user auth, swap user_id for auth.uid() and scope this to it.
+-- Progress is private per user — run scriptura_app_auth.sql after this file
+-- (it replaces the open demo policy below with auth.uid() policies).
+drop policy if exists "all stats" on scriptura_app_sheet_stats;
 create policy "all stats" on scriptura_app_sheet_stats for all using (true) with check (true);
 
 -- ============================================================

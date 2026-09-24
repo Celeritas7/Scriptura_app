@@ -4,7 +4,6 @@ _adherence.oxlintrc.json
 
 # Old backups
 Temp/
-ui_kits/scriptura/Temp/
 
 # OS / editor cruft
 .DS_Store
