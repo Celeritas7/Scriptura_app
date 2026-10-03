@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scriptura — request audio from Akatsuki</title>
+<link rel="stylesheet" href="../styles.css">
+<script>
+  window.SCRIPTURA_SUPABASE = {
+    url: 'https://wylxvmkcrexwfpjpbhyy.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak'
+  };
+</script>
+<script src="../data/data.js"></script>
+<script src="../lib/store.js"></script>
+<style>
+html,body{background:#fff!important;color:#1a1a22!important}
+body{margin:0;font-family:var(--font-ui);font-size:14px;line-height:1.45}
+a{color:#4338ca}a:hover{color:#312e81}
+.wrap{max-width:980px;margin:0 auto;padding:28px 24px 60px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:15px;margin:24px 0 8px}
+p{margin:0 0 10px;max-width:720px;text-wrap:pretty}
+.who{border:1px solid #ddd;border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid #e3e3e8;padding:8px 6px;text-align:left;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#666}
+button{font:inherit;padding:6px 12px;border-radius:6px;border:1px solid #999;background:#f5f5f7;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.st{font-size:12px;color:#555}.st.ok{color:#15803d}.st.err{color:#b91c1c}
+pre{background:#f6f6f8;border-radius:8px;padding:10px 12px;font-size:12px;max-height:220px;overflow:auto;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Request audio from Akatsuki</h1>
+<p>Sends one <code>audio.wanted</code> request per pack (letters, concept words) to the hub. The hub makes the clips with Azure and puts them in the public bucket <code>akatsuki-audio</code>; the app plays them for everyone, signed in or not. No Azure key on this page.</p>
+<p>Order (step 1 · C): send <b>one language's letters</b> first, check they play in a signed-out tab, then send the rest. Only send a pack again when its texts change.</p>
+<div class="who"><span id="who">Checking sign-in…</span><a href="../index.html">Open the app to sign in</a></div>
+<h2>Packs</h2>
+<table><thead><tr><th>Language</th><th>Letters</th><th>Concept words</th><th>In bucket</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<h2>Hub replies <span class="st" id="poll"></span></h2>
+<pre id="log">—</pre>
+</div>
+<script src="../lib/akatsuki-client.js"></script>
+<script src="../lib/scriptura-adapter.js"></script>
+<script>
+(async function () {
+  const D = window.ScripturaData, $ = (id) => document.getElementById(id);
+  const BUCKET = 'https://wylxvmkcrexwfpjpbhyy.supabase.co/storage/v1/object/public/akatsuki-audio/';
+  const out = [];
+  const log = (s) => { out.unshift(new Date().toLocaleTimeString() + '  ' + s); $('log').textContent = out.slice(0, 80).join('\n'); };
+  const packs = (id) => {
+    const L = D.languages[id], words = new Set();
+    L.units.forEach((u) => (u.concepts || (u.concept ? [u.concept] : [])).forEach((k) => (k.positions || []).forEach((p) => { const t = (p.parts || []).map((s) => s.t).join(''); if (t) words.add(t); })));
+    return {
+      letters: [...new Set(L.allChars.map((c) => c.char))].map((t) => ({ text: t, kind: 'letter' })),
+      concepts: [...words].map((t) => ({ text: t, kind: 'word' })),
+    };
+  };
+  const langs = D.languageList;
+  $('rows').innerHTML = langs.map((l) => {
+    const p = packs(l.id);
+    return `<tr><td><b>${l.name}</b> <span style="font-family:${l.font};font-size:18px">${l.native}</span></td>
+      <td>${p.letters.length}</td><td>${p.concepts.length}</td><td class="st" id="b-${l.id}">…</td>
+      <td><div class="acts"><button type="button" data-l="${l.id}" data-p="letters">Send letters</button>${p.concepts.length ? `<button type="button" data-l="${l.id}" data-p="concepts">Send concepts</button>` : ''}<button type="button" data-l="${l.id}" data-retry="1" hidden>Retry failed</button></div></td></tr>`;
+  }).join('');
+
+  // What the learner app would see, signed out: the public index per language.
+  async function bucket(id) {
+    try { const r = await fetch(BUCKET + id + '/_index.json?t=' + Date.now(), { cache: 'no-store' }); const m = r.ok ? await r.json() : {}; const n = Object.keys(m).length; $('b-' + id).textContent = n ? n + ' clips' : 'none yet'; $('b-' + id).className = 'st' + (n ? ' ok' : ''); }
+    catch (e) { $('b-' + id).textContent = 'unreachable'; }
+  }
+  langs.forEach((l) => bucket(l.id));
+
+  const client = await window.ScripturaCloud.init().catch(() => null);
+  const uid = window.ScripturaCloud.userId();
+  if (!client || !uid) { $('who').textContent = 'Not signed in — sign in in the app (same browser, same address), then reload this page.'; document.querySelectorAll('button').forEach((b) => { b.disabled = true; }); return; }
+  const { data: u } = await client.auth.getUser();
+  $('who').textContent = 'Signed in as ' + ((u && u.user && u.user.email) || uid);
+  const sh = window.ScripturaHub(client, { log: (...a) => log('[ak] ' + a.join(' ')) });
+  window.scriptura = { supabase: client, hub: sh.hub };
+  const partial = {};
+
+  document.getElementById('rows').addEventListener('click', async (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const lang = b.dataset.l;
+    b.disabled = true;
+    try {
+      if (b.dataset.retry) {
+        for (const pack of Object.keys(partial[lang] || {})) { const r = await sh.retryPack(lang, pack, packs(lang)[pack]); log(`${lang} ${pack} retry → ${r.status} ${r.id}`); }
+        partial[lang] = {}; b.hidden = true;
+      } else {
+        const pack = b.dataset.p, r = await sh.requestPack(lang, pack, packs(lang)[pack]);
+        log(`${lang} ${pack} → ${r.status}${r.code ? ' ' + r.code : ''} ${r.id}${r.items ? ' · ' + r.items + ' items' : ''}${r.note ? ' · ' + r.note : ''}`);
+      }
+    } catch (err) { log(`${lang} ✕ ${err.code || ''} ${err.message}`); }
+    b.disabled = false;
+  });
+
+  async function poll() {
+    try {
+      const n = await sh.watchReplies((r) => {
+        log(`reply ${r.id} · ${r.status || '?'}${r.total != null ? ` · ${r.ready || 0}/${r.total}` : ''}${r.failed ? ` · ${r.failed} failed` : ''}`);
+        const m = String(r.id || '').match(/^scr-audio:([^:]+):([^:]+):/);
+        if (m) {
+          bucket(m[1]);
+          if (r.status === 'partial') { (partial[m[1]] = partial[m[1]] || {})[m[2]] = 1; const rb = document.querySelector(`button[data-l="${m[1]}"][data-retry]`); if (rb) rb.hidden = false; }
+        }
+      });
+      $('poll').textContent = `checked ${new Date().toLocaleTimeString()}${n ? ` · ${n} new` : ''}`;
+    } catch (e) { $('poll').textContent = `${e.code || ''} ${e.message}`; $('poll').className = 'st err'; }
+  }
+  poll(); setInterval(poll, 20000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scriptura — generate audio clips</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="../data/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+html,body{background:#fff!important;color:#1a1a22!important}
+body{margin:0;font-family:var(--font-ui);font-size:14px;line-height:1.45}
+a{color:#4338ca}a:hover{color:#312e81}
+.wrap{max-width:980px;margin:0 auto;padding:28px 24px 60px}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:15px;margin:26px 0 8px}
+p{margin:0 0 10px;max-width:720px;text-wrap:pretty}
+ol{margin:0 0 10px;padding-left:20px;max-width:720px}
+.box{border:1px solid #ddd;border-radius:10px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#555}
+input,select{font:inherit;padding:7px 9px;border:1px solid #bbb;border-radius:6px;min-width:0}
+input[type=password]{width:320px;max-width:100%}
+button{font:inherit;padding:7px 14px;border-radius:6px;border:1px solid #999;background:#f5f5f7;cursor:pointer}
+button.primary{background:#1a1a22;color:#fff;border-color:#1a1a22}
+button:disabled{opacity:.45;cursor:default}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th,td{border-bottom:1px solid #e3e3e8;padding:8px 6px;text-align:left;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#666}
+td.native{font-size:18px}
+.status{font-size:12px;color:#555;min-width:170px}
+.status.ok{color:#15803d}.status.err{color:#b91c1c}
+.bar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:4px;width:160px}
+.bar i{display:block;height:100%;background:#1a1a22;width:0}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+details{margin-top:6px}
+.clips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.clips button{padding:4px 9px;font-size:18px;line-height:1.2}
+.clips button.miss{border-style:dashed;color:#b91c1c}
+.foot{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.warn{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px 12px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Generate audio clips</h1>
+<p>Makes one MP3 per letter and per concept-card word with Microsoft Azure neural voices, so the app has sound on every device, offline. Run it once per voice change; the app plays these clips first and falls back to the device voice for anything missing.</p>
+
+<h2>1 · Azure key (one-time)</h2>
+<ol>
+<li>Sign in at <a href="https://portal.azure.com" target="_blank" rel="noopener">portal.azure.com</a> → Create a resource → search <b>Speech</b> → Create.</li>
+<li>Pricing tier <b>Free F0</b> (0.5 million characters a month — all clips use under 5,000). Any region.</li>
+<li>Open the resource → <b>Keys and Endpoint</b> → copy <b>Key 1</b> and the <b>Location/Region</b> (e.g. <code>eastus</code>).</li>
+</ol>
+<p class="warn">The key stays in this browser only. Never paste it into the app, a commit, or a chat.</p>
+<div class="box">
+<label>Key 1<input id="key" type="password" autocomplete="off" placeholder="32-character key"></label>
+<label>Region<input id="region" placeholder="eastus" style="width:140px"></label>
+<label>Tier<select id="tier"><option value="f0">Free F0 (≈20 clips/min)</option><option value="s0">Standard S0 (fast)</option></select></label>
+<button type="button" id="test">Test with one clip</button>
+<span id="testMsg" class="status"></span>
+</div>
+
+<h2>2 · Generate per language</h2>
+<p>Pick a voice, press Generate, and spot-check a few clips before downloading. On the free tier Burmese takes about 3 minutes.</p>
+<table><thead><tr><th>Language</th><th>Voice</th><th>Clips</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+
+<h2>3 · Put the files in the app</h2>
+<div class="foot">
+<button type="button" class="primary" id="zip" disabled>Download zip of generated clips</button>
+<span id="zipMsg" class="status"></span>
+</div>
+<ol style="margin-top:10px">
+<li>Unzip into your <code>Scriptura_app</code> folder, next to <code>index.html</code>. It creates <code>audio/&lt;language&gt;/…</code>.</li>
+<li>Commit and push. The app picks the clips up automatically — no code change.</li>
+</ol>
+</div>
+<script>
+(function () {
+  const D = window.ScripturaData;
+  const VOICES = {
+    burmese: ['my-MM', ['my-MM-NilarNeural', 'my-MM-ThihaNeural']],
+    hindi: ['hi-IN', ['hi-IN-SwaraNeural', 'hi-IN-MadhurNeural']],
+    telugu: ['te-IN', ['te-IN-ShrutiNeural', 'te-IN-MohanNeural']],
+    sinhala: ['si-LK', ['si-LK-ThiliniNeural', 'si-LK-SameeraNeural']],
+    tamil: ['ta-IN', ['ta-IN-PallaviNeural', 'ta-IN-ValluvarNeural']],
+    hiragana: ['ja-JP', ['ja-JP-NanamiNeural', 'ja-JP-KeitaNeural']],
+    katakana: ['ja-JP', ['ja-JP-NanamiNeural', 'ja-JP-KeitaNeural']],
+    korean: ['ko-KR', ['ko-KR-SunHiNeural', 'ko-KR-InJoonNeural']],
+    chinese: ['zh-CN', ['zh-CN-XiaoxiaoNeural', 'zh-CN-YunxiNeural']],
+  };
+  // Same key the app computes (lib/speech.js): code points in hex, dash-joined.
+  const keyOf = (t) => [...String(t).normalize('NFC')].map((c) => c.codePointAt(0).toString(16)).join('-');
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+  const $ = (id) => document.getElementById(id);
+  const LS = 'scriptura.azureTts';
+  try { const s = JSON.parse(localStorage.getItem(LS) || '{}'); $('key').value = s.key || ''; $('region').value = s.region || ''; $('tier').value = s.tier || 'f0'; } catch (e) {}
+  const saveCfg = () => localStorage.setItem(LS, JSON.stringify({ key: $('key').value.trim(), region: $('region').value.trim(), tier: $('tier').value }));
+  ['key', 'region', 'tier'].forEach((id) => $(id).addEventListener('change', saveCfg));
+
+  // Every text the app can ask to hear: each letter, then each concept-card word.
+  function clipsFor(id) {
+    const L = D.languages[id], seen = new Set(), out = [];
+    const add = (t, kind) => { t = String(t || '').normalize('NFC'); if (!t || seen.has(t)) return; seen.add(t); out.push({ text: t, kind, key: keyOf(t) }); };
+    (L.allChars || []).forEach((c) => add(c.char, 'letter'));
+    L.units.forEach((u) => (u.concepts || (u.concept ? [u.concept] : [])).forEach((k) => (k.positions || []).forEach((p) => add((p.parts || []).map((s) => s.t).join(''), 'word'))));
+    return out;
+  }
+
+  async function synth(text, locale, voice) {
+    const key = $('key').value.trim(), region = $('region').value.trim();
+    if (!key || !region) throw new Error('Add your key and region first.');
+    const ssml = `<speak version="1.0" xml:lang="${locale}"><voice name="${voice}"><prosody rate="-15%">${esc(text)}</prosody></voice></speak>`;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const r = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+        method: 'POST', body: ssml,
+        headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3' },
+      });
+      if (r.ok) { const b = await r.blob(); if (b.size < 200) throw new Error('Empty audio returned.'); return b; }
+      if (r.status === 429) { const wait = (Number(r.headers.get('Retry-After')) || 10) * 1000; await new Promise((res) => setTimeout(res, wait)); continue; }
+      if (r.status === 401) throw new Error('Key or region is wrong (401).');
+      throw new Error(`Azure error ${r.status}`);
+    }
+    throw new Error('Rate limited too many times — try again in a minute.');
+  }
+
+  let audio = null;
+  const play = (blob) => { if (audio) audio.pause(); audio = new Audio(URL.createObjectURL(blob)); audio.play(); };
+
+  $('test').onclick = async () => {
+    const m = $('testMsg'); m.className = 'status'; m.textContent = 'Asking Azure…'; saveCfg();
+    try { const b = await synth('မင်္ဂလာပါ', 'my-MM', 'my-MM-NilarNeural'); play(b); m.className = 'status ok'; m.textContent = 'Works — you should hear “mingalaba”.'; }
+    catch (e) { m.className = 'status err'; m.textContent = e.message; }
+  };
+
+  const done = {}; // lang -> { voice, blobs: {key: Blob}, clips }
+  const langs = D.languageList.filter((l) => VOICES[l.id]);
+  $('rows').innerHTML = langs.map((l) => {
+    const n = clipsFor(l.id).length, vs = VOICES[l.id][1];
+    return `<tr id="r-${l.id}"><td><b>${esc(l.name)}</b> <span class="native" style="font-family:${l.font}">${esc(l.native)}</span></td>
+      <td><select id="v-${l.id}">${vs.map((v) => `<option>${v}</option>`).join('')}</select></td><td>${n}</td>
+      <td><div class="status" id="s-${l.id}">—</div><div class="bar"><i id="b-${l.id}"></i></div></td>
+      <td><div class="row-actions"><button type="button" id="g-${l.id}">Generate</button></div></td></tr>
+      <tr><td colspan="5" style="border-bottom:0;padding-top:0"><details id="d-${l.id}" hidden><summary>Listen to the clips</summary><div class="clips" id="c-${l.id}" style="font-family:${l.font}"></div></details></td></tr>`;
+  }).join('');
+
+  let busy = false;
+  langs.forEach((l) => {
+    $('g-' + l.id).onclick = async () => {
+      if (busy) return; busy = true; saveCfg();
+      document.querySelectorAll('[id^="g-"]').forEach((b) => { b.disabled = true; });
+      const [locale] = VOICES[l.id], voice = $('v-' + l.id).value, clips = clipsFor(l.id);
+      const st = $('s-' + l.id), bar = $('b-' + l.id), box = $('c-' + l.id);
+      const gap = $('tier').value === 'f0' ? 3100 : 120;
+      const res = { voice, locale, blobs: {}, clips, failed: [] };
+      box.innerHTML = ''; $('d-' + l.id).hidden = false;
+      for (let i = 0; i < clips.length; i++) {
+        const c = clips[i]; st.className = 'status'; st.textContent = `${i + 1} / ${clips.length} · ${c.kind}`;
+        const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = c.text; btn.title = c.kind; box.appendChild(btn);
+        try {
+          const b = await synth(c.text, locale, voice); res.blobs[c.key] = b; btn.onclick = () => play(b);
+        } catch (e) {
+          btn.className = 'miss'; btn.title = e.message; res.failed.push(c.text);
+          if (/401|key and region/.test(e.message)) { st.className = 'status err'; st.textContent = e.message; break; }
+        }
+        bar.style.width = `${((i + 1) / clips.length) * 100}%`;
+        if (i + 1 < clips.length) await new Promise((r) => setTimeout(r, gap));
+      }
+      const ok = Object.keys(res.blobs).length;
+      if (ok) { done[l.id] = res; st.className = res.failed.length ? 'status err' : 'status ok'; st.textContent = `${ok} clips ready${res.failed.length ? ` · ${res.failed.length} failed (dashed)` : ''}`; }
+      busy = false; document.querySelectorAll('[id^="g-"]').forEach((b) => { b.disabled = false; });
+      $('zip').disabled = !Object.keys(done).length;
+    };
+  });
+
+  $('zip').onclick = async () => {
+    const zip = new JSZip(), m = $('zipMsg'); let n = 0;
+    Object.keys(done).forEach((id) => {
+      const r = done[id], dir = zip.folder('audio').folder(id);
+      Object.keys(r.blobs).forEach((k) => { dir.file(k + '.mp3', r.blobs[k]); n++; });
+      dir.file('index.json', JSON.stringify({ voice: r.voice, locale: r.locale, generated: new Date().toISOString(), keys: Object.keys(r.blobs) }, null, 1));
+    });
+    m.textContent = 'Zipping…';
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'scriptura-audio.zip'; a.click();
+    m.className = 'status ok'; m.textContent = `${n} clips in ${Object.keys(done).length} language(s).`;
+  };
+})();
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 //                  to the scheduler, so drilling outside the schedule can never
 //                  push a letter further out than it has earned.
 function ReviewSession({ queue, onExit, onComplete, xpPerCard = 5, langId, allChars, mode = 'review', onGo }) {
-  const { Card, Button } = window.ScripturaDesignSystem_72b484;
+  const { Card, Button, Toggle } = window.ScripturaDesignSystem_72b484;
   const { Icon, EmptyState } = window;
   const SRS = window.ScripturaSRS;
   const practice = mode === 'practice';
@@ -13,6 +13,9 @@ function ReviewSession({ queue, onExit, onComplete, xpPerCard = 5, langId, allCh
   const [flipped, setFlipped] = React.useState(false);
   const [tally, setTally] = React.useState({ good: 0, again: 0 });
   const [done, setDone] = React.useState(false);
+  const AUTO_KEY = 'scriptura.review.autoPlay';
+  const [autoPlay, setAutoPlayState] = React.useState(() => { try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (e) { return false; } });
+  const setAutoPlay = (v) => { setAutoPlayState(v); try { localStorage.setItem(AUTO_KEY, v ? '1' : '0'); } catch (e) {} };
   const c = queue[i];
   const rec = (!practice && SRS && langId && c && c._i != null) ? SRS.rec(langId, c._i) : null;
 
@@ -87,15 +90,16 @@ function ReviewSession({ queue, onExit, onComplete, xpPerCard = 5, langId, allCh
       )}
 
       <Card style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-6)' }}>
-        <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} font={c.font} front="char" accent="var(--accent-quiz)" flipped={flipped} onFlip={setFlipped} />
+        <window.Flashcard char={c.char} roman={c.roman} name={c.name} gloss={c.gloss} font={c.font} front="char" accent="var(--accent-quiz)" flipped={flipped} onFlip={setFlipped} lang={langId} autoPlay={autoPlay} />
         {!flipped ? (
           <Button variant="secondary" icon={<Icon name="review" size={16} />} onClick={() => setFlipped(true)}>Flip to check</Button>
         ) : (
-          <div style={{ display: 'flex', gap: 'var(--space-5)', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-5)', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
             <Button accent="danger" variant="secondary" icon={<Icon name="review" size={16} />} onClick={() => grade(false)}>Again</Button>
             <Button accent="practice" icon={<Icon name="check" size={16} />} onClick={() => grade(true)}>{practice ? 'Good' : `Good · +${xpPerCard}`}</Button>
           </div>
         )}
+        {Toggle && <Toggle checked={autoPlay} onChange={setAutoPlay} label="Play sound on flip" />}
       </Card>
     </div>
   );

@@ -283,7 +283,10 @@
   const DEV = f('devanagari');
   const attach = (lid, uid, concept) => {
     const u = languages[lid] && languages[lid].units.find((x) => x.id === uid);
-    if (u) u.concept = concept;
+    if (!u) return;
+    // a unit can open with several cards, read in order; `concept` stays the first for older readers
+    u.concepts = (u.concepts || (u.concept ? [u.concept] : [])).concat(concept);
+    u.concept = u.concepts[0];
   };
   const seg = (...a) => a.map((x) => (Array.isArray(x) ? { t: x[0], hi: 1 } : { t: x }));
 
@@ -335,6 +338,149 @@
     { id: 'nasal', tab: 'After ம', sound: 'b', ipa: '/mb/', rule: 'After its own nasal ம, ப voices to b.',
       parts: seg('பாம்', ['பு']), roman: seg('pām', ['bu']), mean: 'snake' },
   ], 'That completes the pattern: க ச ட த ப each stand for a hard and a soft sound.'));
+
+  // Hindi: the inherent vowel, before the first letter.
+  attach('hindi', 'ka', {
+    id: 'hindi-inherent-a', glyph: 'क', title: 'Every letter already says "a"',
+    blurb: 'A Hindi consonant carries a built-in a: क is read ka, not k. A vowel sign swaps that a for another vowel; the small stroke ् removes it.',
+    note: 'Read once before the Ka group',
+    positions: [
+      { id: 'bare', tab: 'On its own', sound: 'ka', ipa: '/kə/', rule: 'Nothing is written for the a — it comes free with the letter.',
+        parts: seg(['क'], 'मल'), roman: seg(['ka'], 'mal'), mean: 'lotus' },
+      { id: 'sign', tab: 'With a vowel sign', sound: 'ki', ipa: '/ki/', rule: 'A vowel sign replaces the built-in a: क + ि = कि.',
+        parts: seg(['कि'], 'ताब'), roman: seg(['ki'], 'tāb'), mean: 'book' },
+      { id: 'virama', tab: 'With ्', sound: 'k', ipa: '/k/', rule: 'The halant ् strips the a. Mid-word the bare k usually joins the next letter.',
+        parts: seg('प', ['क्'], 'का'), roman: seg('pa', ['k'], 'kā'), mean: 'firm, ripe' },
+      { id: 'final', tab: 'End of word', sound: 'k', ipa: '/k/', rule: 'In speech the last a is dropped: नमक is namak, not namaka. The spelling does not change.',
+        parts: seg('नम', ['क']), roman: seg('nama', ['k']), mean: 'salt' },
+    ],
+    contrast: { from: { text: 'क', font: DEV, label: 'ka · built-in a' }, to: { text: 'क्', label: 'k · a removed' },
+      note: 'Every letter you learn next works the same way: ख is kha, ग is ga. Learn the shape and you can already read it.' },
+  });
+
+  // Telugu: how vowel signs sit on the letter, before the first letter.
+  const TEL = f('telugu');
+  attach('telugu', 'ka', {
+    id: 'telugu-vowel-signs', glyph: 'క', font: TEL, title: 'Vowel signs sit on the letter',
+    blurb: 'Like Hindi, every Telugu letter carries a built-in a. A vowel sign changes it — and most signs replace the small tick on top rather than sitting beside the letter.',
+    note: 'Read once before the Ka group',
+    positions: [
+      { id: 'bare', tab: 'క', sound: 'ka', ipa: '/ka/', rule: 'The tick on top (తలకట్టు, talakaṭṭu) marks the built-in a.',
+        parts: seg(['క'], 'లం'), roman: seg(['ka'], 'laṁ'), mean: 'pen' },
+      { id: 'aa', tab: 'కా', sound: 'kā', ipa: '/kaː/', rule: 'Long ā: the tick becomes a hook, top right.',
+        parts: seg(['కా'], 'కి'), roman: seg(['kā'], 'ki'), mean: 'crow' },
+      { id: 'i', tab: 'కి', sound: 'ki', ipa: '/ki/', rule: 'i: the tick becomes a small loop on top.',
+        parts: seg(['కి'], 'టికీ'), roman: seg(['ki'], 'ṭikī'), mean: 'window' },
+      { id: 'u', tab: 'కు', sound: 'ku', ipa: '/ku/', rule: 'u and ū are the exception — they hang off the right side, and the tick stays.',
+        parts: seg(['కు'], 'క్క'), roman: seg(['ku'], 'kka'), mean: 'dog' },
+      { id: 'o', tab: 'కో', sound: 'kō', ipa: '/koː/', rule: 'e and o signs sit on top again: కె ke, కొ ko, కో kō.',
+        parts: seg(['కో'], 'తి'), roman: seg(['kō'], 'ti'), mean: 'monkey' },
+    ],
+    contrast: { from: { text: 'कि कु', font: DEV, label: 'Hindi · signs around' }, to: { text: 'కి కు', label: 'Telugu · signs on top' },
+      note: 'Same system as Hindi, different placement. Look at the top of the letter first — that is where the vowel usually is.' },
+  });
+
+  // Burmese: one reading rule per consonant group, in the order learners meet them.
+  attach('burmese', 'ka', {
+    id: 'burmese-voicing', glyph: 'က', title: 'Hard at the start, soft inside',
+    blurb: 'Inside a word, a plain letter usually softens: က becomes g, စ becomes z, တ becomes d, ပ becomes b. The spelling never changes.',
+    note: 'Read once before the Ka group',
+    positions: [
+      { id: 'initial', tab: 'Start of word', sound: 'k', ipa: '/k/', rule: 'At the start of a word က is a plain k.',
+        parts: seg(['က'], 'ား'), roman: seg(['k'], 'a'), mean: 'car' },
+      { id: 'open', tab: 'After a vowel', sound: 'g', ipa: '/ɡ/', rule: 'After an open syllable the next letter softens: ရေ + ကူး is ye-gu.',
+        parts: seg('ရေ', ['ကူး']), roman: seg('ye', ['gu']), mean: 'to swim' },
+      { id: 'nasal', tab: 'After a nasal', sound: 'b', ipa: '/b/', rule: 'After a nasal ending it softens too: ပ is said b here.',
+        parts: seg('ဆံ', ['ပင်']), roman: seg('hsan', ['bin']), mean: 'hair' },
+      { id: 'stop', tab: 'After a stop', sound: 'p', ipa: '/p/', rule: 'After a syllable that ends in a stop (က် တ် ပ် စ်) the letter stays hard.',
+        parts: seg('လက်', ['ပတ်']), roman: seg('let', ['pat']), mean: 'wristband' },
+    ],
+    contrast: { from: { text: 'က စ တ ပ', font: BUR, label: 'written' }, to: { text: 'g z d b', font: 'var(--font-ui)', label: 'said inside a word' },
+      note: 'Many words with ခ ဆ ထ ဖ soften the same way. When in doubt, listen: the spelling won’t tell you.' },
+  });
+  attach('burmese', 'sa', {
+    id: 'burmese-vowel-order', glyph: 'ေ', title: 'Written first, read after',
+    blurb: 'Burmese vowel signs sit above, below, before or after the letter — sometimes on two sides at once. Always say the consonant first.',
+    note: 'Read once before the Sa group',
+    positions: [
+      { id: 'before', tab: 'ေ on the left', sound: 'e', ipa: '/e/', rule: 'ေ is drawn to the left of the letter, but read after it: ရေ is ye, not e-ya.',
+        parts: seg(['ရေ']), roman: seg(['ye']), mean: 'water' },
+      { id: 'above', tab: 'ီ on top', sound: 'i', ipa: '/i/', rule: 'ိ and ီ sit on top of the letter.',
+        parts: seg(['ညီ']), roman: seg(['nyi']), mean: 'younger brother' },
+      { id: 'below', tab: 'ူ below', sound: 'u', ipa: '/u/', rule: 'ု and ူ hang underneath.',
+        parts: seg(['ဒူး']), roman: seg(['du']), mean: 'knee' },
+      { id: 'around', tab: 'ော around', sound: 'aw', ipa: '/ɔ/', rule: 'ေ on the left plus ာ on the right wrap the letter: ကော is kaw.',
+        parts: seg(['ကော'], 'င်း'), roman: seg(['kau'], 'ng'), mean: 'good' },
+    ],
+    contrast: { from: { text: 'က + ေ', font: BUR, label: 'typed & read' }, to: { text: 'ကေ', label: 'drawn' },
+      note: 'Keyboards follow reading order too: type the consonant first, then ေ — the font moves it to the left for you.' },
+  });
+  attach('burmese', 'tta', {
+    id: 'burmese-tones', glyph: 'ငါ', title: 'Three tones and a stop',
+    blurb: 'Every open syllable has a tone. No mark is low, း is high, ့ is short and creaky. A syllable closed by a stop has no tone at all.',
+    note: 'Read once before the retroflex Ta group',
+    positions: [
+      { id: 'low', tab: 'No mark', sound: 'low', ipa: '/ŋà/', rule: 'Low and level, held a little.',
+        parts: seg(['ငါ']), roman: seg(['ngà']), mean: 'I, me (casual)' },
+      { id: 'high', tab: 'း', sound: 'high', ipa: '/ŋá/', rule: 'High, often falling slightly at the end.',
+        parts: seg(['ငါး']), roman: seg(['ngá']), mean: 'fish; five' },
+      { id: 'creaky', tab: '့', sound: 'creaky', ipa: '/ŋa̰/', rule: 'Short, high and tight in the throat.',
+        parts: seg(['ငါ့']), roman: seg(['nga̰']), mean: 'my' },
+      { id: 'stop', tab: 'Stopped', sound: 'stop', ipa: '/lɛʔ/', rule: 'Ending in က် စ် တ် ပ်: cut off by a quick catch in the throat, no tone to choose.',
+        parts: seg('လ', ['က်']), roman: seg('le', ['t']), mean: 'hand, arm' },
+    ],
+    contrast: { from: { text: 'ငါ ငါး ငါ့', font: BUR, label: 'three words' }, to: { text: 'nga', font: 'var(--font-ui)', label: 'same letters' },
+      note: 'A bare letter with no vowel sign (မ, က) is already short and creaky — ့ is only written on other vowels.' },
+  });
+  attach('burmese', 'ta', {
+    id: 'burmese-asat', glyph: 'တ်', title: 'The killer mark ်',
+    blurb: '် (asat, “killer”) silences a letter’s own vowel so it closes the syllable before it. The closing letter is rarely said as itself.',
+    note: 'Read once before the dental Ta group',
+    positions: [
+      { id: 'stop', tab: 'တ်', sound: 'ʔ', ipa: '/wʊʔ/', rule: 'က် စ် တ် ပ် end in a glottal catch — the t is never released.',
+        parts: seg('ဝ', ['တ်']), roman: seg('wu', ['t']), mean: 'to wear' },
+      { id: 'vowel', tab: 'က်', sound: 'et', ipa: '/hɛʔ/', rule: 'The closing letter changes the vowel too: a + က် is said et.',
+        parts: seg('ဆ', ['က်']), roman: seg('hs', ['et']), mean: 'to continue' },
+      { id: 'nasal', tab: 'န်', sound: 'n', ipa: '/páɴ/', rule: 'င် ဉ် န် မ် close with a nasal — usually a light n, or just a nasal vowel.',
+        parts: seg('ပ', ['န်'], 'း'), roman: seg('pa', ['n']), mean: 'flower' },
+      { id: 'mn', tab: 'မ်', sound: 'n', ipa: '/káɴ/', rule: 'Written m, said n: မ် and န် sound the same at the end of a syllable.',
+        parts: seg('က', ['မ်'], 'း'), roman: seg('ka', ['n']), mean: 'shore, bank' },
+    ],
+    contrast: { from: { text: 'တ', font: BUR, label: 'ta · a letter' }, to: { text: 'တ်', label: 'no vowel · closes' },
+      note: 'Same job as the Hindi halant ्: the mark removes the built-in vowel.' },
+  });
+  attach('burmese', 'pa', {
+    id: 'burmese-medials', glyph: 'မြ', title: 'Four small add-ons',
+    blurb: 'Four marks attach to a consonant and change how it starts: ျ and ြ add y, ွ adds w, ှ adds a breath of h.',
+    note: 'Read once before the Pa group',
+    positions: [
+      { id: 'ya', tab: 'ျ', sound: 'y', ipa: '/tɕ/', rule: 'ျ adds y. On က ခ ဂ it turns into ch / j: ကျ is “cha”.',
+        parts: seg(['ကျော'], 'င်း'), roman: seg(['kyau'], 'ng'), mean: 'school, monastery' },
+      { id: 'ra', tab: 'ြ', sound: 'y', ipa: '/mj/', rule: 'ြ wraps around the letter. It also adds y — today it sounds the same as ျ.',
+        parts: seg(['မြ'], 'န်မာ'), roman: seg(['mya'], 'nmar'), mean: 'Myanmar' },
+      { id: 'wa', tab: 'ွ', sound: 'w', ipa: '/jw/', rule: 'ွ hangs underneath and adds w: ရ + ွ + ာ is ywa.',
+        parts: seg(['ရွ'], 'ာ'), roman: seg(['yw'], 'a'), mean: 'village' },
+      { id: 'ha', tab: 'ှ', sound: 'h', ipa: '/m̥/', rule: 'ှ adds a puff of breath before a nasal or ya/la: မှ is hma.',
+        parts: seg(['မှ'], 'န်'), roman: seg(['hma'], 'n'), mean: 'correct; mirror' },
+    ],
+    contrast: { from: { text: 'မ', font: BUR, label: 'ma' }, to: { text: 'မျ မြ မွ မှ', label: 'mya · mya · mwa · hma' },
+      note: 'They combine: မြွေ (mwe, “snake”) uses ြ and ွ together. Learn the four once and they work on every consonant.' },
+  });
+  attach('burmese', 'misc', {
+    id: 'burmese-ra-ya', glyph: 'ရ', title: 'Written r, said y',
+    blurb: 'ရ once stood for r. In standard Burmese it is almost always said y — only loanwords keep the r.',
+    note: 'Read once before the last consonant group',
+    positions: [
+      { id: 'y', tab: 'Everyday words', sound: 'y', ipa: '/j/', rule: 'In native words ရ is y, just like ယ.',
+        parts: seg(['ရေ']), roman: seg(['ye']), mean: 'water' },
+      { id: 'sh', tab: 'With ှ', sound: 'sh', ipa: '/ʃ/', rule: 'With ှ, ရ becomes sh: ရှိ is shi.',
+        parts: seg(['ရှိ']), roman: seg(['shi']), mean: 'to have, to be there' },
+      { id: 'r', tab: 'Loanwords', sound: 'r', ipa: '/r/', rule: 'Borrowed words keep the r.',
+        parts: seg(['ရေ'], 'ဒီယို'), roman: seg(['re'], 'diyo'), mean: 'radio' },
+    ],
+    contrast: { from: { text: 'ယ', font: BUR, label: 'ya' }, to: { text: 'ရ', label: 'also ya' },
+      note: 'ယ and ရ sound the same in most words — you learn which one each word is spelled with.' },
+  });
 
   // Burmese: stacked consonants, once every consonant is known.
   attach('burmese', 'misc', {
@@ -412,8 +558,8 @@
       { id: 'chinese', name: 'Chinese', native: '汉字', font: f('chinese'), group: 'East Asian' },
     ],
     defaultLang: 'burmese',
-    // Seed prior progress for Burmese so the demo opens mid-journey.
-    seed: { burmese: ['က','ခ','ဂ','ဃ','င','စ','ဇ','ည'] },
-    profile: { name: 'Learner', streak: 6, dailyGoalXp: 30, todayXp: 20, level: 4, levelXp: 180, levelMax: 250, xpPerCard: 5 },
+    // Learner numbers (learned, XP, level, streak) are derived from the review
+    // schedule in index.html; only the rules live here.
+    profile: { name: 'Learner', dailyGoalXp: 30, levelMax: 250, xpPerCard: 5 },
   };
 })();

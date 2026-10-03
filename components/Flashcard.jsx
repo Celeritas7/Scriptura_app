@@ -1,8 +1,14 @@
 // Flashcard — a 3D flip card. Front shows the prompt, back the answer +
 // the Burmese letter-name mnemonic. Click / tap to flip.
-function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, accent = 'var(--accent-quiz)', flipped, onFlip, font = 'var(--font-burmese)' }) {
+// `lang` adds a speaker beside the romanization on the back (hub clip →
+// app clip → device voice); `autoPlay` plays it each time the card flips over.
+function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, accent = 'var(--accent-quiz)', flipped, onFlip, font = 'var(--font-burmese)', lang, autoPlay = false }) {
   const [localFlip, setLocalFlip] = React.useState(false);
   const isFlipped = flipped != null ? flipped : localFlip;
+  React.useEffect(() => {
+    const S = window.ScripturaSpeech;
+    if (isFlipped && autoPlay && lang && S && S.has(lang, char)) S.speak(char, lang);
+  }, [isFlipped, char]);
   const flip = () => { onFlip ? onFlip(!isFlipped) : setLocalFlip((f) => !f); };
 
   const face = {
@@ -32,7 +38,10 @@ function Flashcard({ char, roman, name, gloss, front = 'roman', size = 280, acce
         {/* BACK */}
         <div style={{ ...face, background: 'var(--bg-elevated)', transform: 'rotateY(180deg)' }}>
           <div style={{ fontSize: '5rem', fontFamily: font, lineHeight: 1, color: 'var(--text-primary)' }}>{char}</div>
-          <div style={{ marginTop: 'var(--space-4)', fontSize: 'var(--fs-lg)', color: accent, fontWeight: 600 }}>{roman}</div>
+          <div style={{ marginTop: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span style={{ fontSize: 'var(--fs-lg)', color: accent, fontWeight: 600 }}>{roman}</span>
+            {lang && window.SpeakButton && <window.SpeakButton text={char} lang={lang} accent={accent} label={`Hear ${roman}`} />}
+          </div>
           {name && name !== roman && <div style={{ marginTop: 'var(--space-2)', fontFamily: font, fontSize: 'var(--fs-lg)', color: 'var(--text-primary)' }}>{name}</div>}
           {gloss && <div style={{ fontSize: 'var(--fs-small)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{gloss}”</div>}
         </div>

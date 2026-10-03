@@ -1,7 +1,7 @@
 // Dashboard — the home screen. Left: what to do next (active unit, its actual
 // glyphs, today's numbers, practice tools). Right: every script you're learning,
 // grouped by writing-system family, with per-script progress.
-function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, theme, lang, languageList, themes, currentLang, onPick }) {
+function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, theme, lang, languageList, themes, currentLang, onPick, learnedCounts }) {
   const { Card, Button } = window.ScripturaDesignSystem_72b484;
   const Icon = window.Icon;
   const D = window.ScripturaData;
@@ -26,7 +26,7 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
     const L = (D.languages || {})[l.id];
     const lt = (themes && themes[l.id]) || { color: 'var(--accent-indic)', color2: 'var(--accent-indic-deep)', emblem: '', motif: '' };
     const tot = L ? L.allChars.length : 0;
-    const n = l.id === currentLang ? learnedCount : (((D.seed || {})[l.id]) || []).length;
+    const n = l.id === currentLang ? learnedCount : ((learnedCounts || {})[l.id] || 0);
     const on = l.id === currentLang;
     return (
       <button type="button" onClick={() => onPick(l.id)} title={l.name}
@@ -66,7 +66,7 @@ function Dashboard({ profile, units, learned, activeUnitId, dueCount, onGo, them
   }, [pickerOpen]);
   const pick = (id) => { setPickerOpen(false); onPick(id); };
   const groupOf = (l) => l.group || '';
-  const countFor = (id) => id === currentLang ? learnedCount : (((D.seed || {})[id]) || []).length;
+  const countFor = (id) => id === currentLang ? learnedCount : ((learnedCounts || {})[id] || 0);
   const totalFor = (id) => { const L = (D.languages || {})[id]; return L ? L.allChars.length : 0; };
 
   const Tool = ({ icon, label, desc, badge, onClick }) => (

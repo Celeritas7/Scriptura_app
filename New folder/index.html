@@ -189,25 +189,15 @@
     const [theme, setTheme] = React.useState('midnight');
     const [langId, setLangId] = React.useState(D.defaultLang);
     const [route, setRoute] = React.useState({ screen: 'home' });
-    const [srsRev, setSrsRev] = React.useState(0);
-    // Learned set, XP, level and streak all come from the learner's own review
-    // schedule (synced to their account) — no demo numbers. sessionLearned
-    // covers a just-finished lesson until its grades land in the schedule.
-    const [sessionLearned, setSessionLearned] = React.useState({});
-    const learnedByLang = React.useMemo(() => {
-      const S = window.ScripturaSRS, m = {};
-      Object.keys(D.languages).forEach((id) => {
-        const s = S ? S.learnedChars(id, D.languages[id].allChars) : new Set();
-        (sessionLearned[id] || []).forEach((c) => s.add(c));
-        m[id] = s;
-      });
-      return m;
-    }, [srsRev, sessionLearned]);
-    const learnedCounts = React.useMemo(() => { const m = {}; Object.keys(learnedByLang).forEach((id) => { m[id] = learnedByLang[id].size; }); return m; }, [learnedByLang]);
-    const profile = React.useMemo(() => ({ ...D.profile, ...(window.ScripturaSRS ? window.ScripturaSRS.profile(Object.keys(D.languages), D.profile) : {}) }), [srsRev]);
+    const [learnedByLang, setLearnedByLang] = React.useState(() => {
+      const m = {}; Object.keys(D.languages).forEach((id) => { m[id] = new Set((D.seed && D.seed[id]) || []); }); return m;
+    });
+    const [profile, setProfile] = React.useState(() => ({ ...D.profile }));
     const lang = D.languages[langId];
     const learned = learnedByLang[langId];
-    // Review queue comes from the Leitner boxes (localStorage).
+    // Review queue comes from the Leitner boxes (localStorage), falling back to
+    // the seeded `srs: 'due'` characters until the learner has any real history.
+    const [srsRev, setSrsRev] = React.useState(0);
     const queue = React.useMemo(() => {
       const S = window.ScripturaSRS;
       if (!S) return lang.dueChars;
@@ -215,7 +205,14 @@
       const idx = S.dueList(langId, lang.allChars.length);
       // carry the language-wide index on each card so grading can write back
       if (idx.length) return idx.map((i) => (lang.allChars[i] ? { ...lang.allChars[i], _i: i, font: lang.allChars[i].font || lang.font } : null)).filter(Boolean);
-      return [];
+      // The seeded `srs: 'due'` characters are a demo queue for a language the
+      // learner has never touched. Gate on ABSENCE OF HISTORY, not on "nothing
+      // due" — otherwise a real schedule with nothing due today gets replaced by
+      // demo cards, inflating the due count and grading characters the
+      // scheduler deliberately pushed out.
+      const hasHistory = Object.keys(S.load(langId)).length > 0;
+      if (hasHistory) return [];
+      return lang.dueChars.map((c) => ({ ...c, _i: lang.allChars.indexOf(c) }));
     }, [lang, langId, srsRev]);
     // Flashcard deck: every character, shuffled once per language visit
     const flashDeck = React.useMemo(() => {
@@ -229,23 +226,20 @@
       return (u || lang.units[lang.units.length - 1]).id;
     }, [lang, learned]);
 
-    // Every lesson/review grade writes to the schedule; bump srsRev so the derived
-    // learned set, XP, level and streak recompute.
-    const refresh = () => setSrsRev((r) => r + 1);
+    const addXp = (xp) => setProfile((p) => ({ ...p, todayXp: p.todayXp + xp, levelXp: Math.min(p.levelMax, p.levelXp + xp) }));
 
-    const go = (r) => { refresh(); setRoute(r); };
+    const go = (r) => setRoute(r);
 
-    const finishLesson = (chars) => {
-      setSessionLearned((prev) => ({ ...prev, [langId]: [...(prev[langId] || []), ...chars] }));
-      refresh();
+    const finishLesson = (chars, xp) => {
+      setLearnedByLang((prev) => { const n = new Set(prev[langId]); chars.forEach((c) => n.add(c)); return { ...prev, [langId]: n }; });
+      addXp(xp);
+      setSrsRev((r) => r + 1); // lesson graded into the Leitner boxes
       setRoute({ screen: 'path' });
     };
 
     const switchLang = (id) => { setLangId(id); setRoute({ screen: 'home' }); pullStats(id); };
     // hub audio index: one fetch per language, when it loads (AKATSUKI step 1 · A3)
     React.useEffect(() => { if (window.ScripturaSpeech) window.ScripturaSpeech.ensure(langId); }, [langId]);
-    // clips come from the hub now: drop the retired Azure key the old generator left behind
-    React.useEffect(() => { try { localStorage.removeItem('scriptura.azureTts'); } catch (e) {} }, []);
 
     // --- cloud: pull accumulated stats for a language and merge locally ---
     const [cloudStatus, setCloudStatus] = React.useState('off');
@@ -274,9 +268,7 @@
         if (u) {
           setRoute((r) => (r.screen === 'login' ? { screen: 'home' } : r));
           // lift this device's progress into the account, then pull
-          const sync = await Cloud.syncDevice(Object.keys(D.languages), (id) => (i) => D.languages[id].allChars[i] && D.languages[id].allChars[i].char).catch(() => null);
-          // different account than last time: device was wiped — restart clean, then pull this account
-          if (sync && sync.switched) { location.replace(location.pathname + location.search); return; }
+          await Cloud.syncDevice(Object.keys(D.languages), (id) => (i) => D.languages[id].allChars[i] && D.languages[id].allChars[i].char).catch(() => {});
           pullStats(langRef.current);
           setSrsRev((r) => r + 1);
         } else {
@@ -293,8 +285,6 @@
     // Sign-out is a shared-device hand-off: back up the review schedule, then
     // wipe this device's progress and restart on the sign-in screen. The
     // account keeps everything; it comes back on the next sign-in.
-    // Admin-only header link to tools/. Display-only gate: the tools page still requires sign-in.
-    const ADMIN_EMAILS = ['mangaonkaraniket@gmail.com'];
     const signOut = async () => {
       const backedUp = await Cloud.flushSrs(Object.keys(D.languages)).catch(() => false);
       if (!backedUp && !window.confirm("Your review schedule couldn't be backed up to your account. Sign out anyway? It will be removed from this device.")) return;
@@ -336,7 +326,7 @@
     );
 
     let body;
-    if (route.screen === 'home') body = <window.Dashboard profile={profile} units={lang.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} theme={D.themes[langId]} lang={lang} languageList={D.languageList} themes={D.themes} learnedCounts={learnedCounts} currentLang={langId} onPick={switchLang} />;
+    if (route.screen === 'home') body = <window.Dashboard profile={profile} units={lang.units} learned={learned} activeUnitId={activeUnitId} dueCount={queue.length} onGo={go} theme={D.themes[langId]} lang={lang} languageList={D.languageList} themes={D.themes} currentLang={langId} onPick={switchLang} />;
     else if (route.screen === 'path') body = <window.LessonPath units={lang.units} learned={learned} activeUnitId={activeUnitId} langName={lang.name} theme={D.themes[langId]} onGo={go} />;
     else if (route.screen === 'lesson') {
       const unit = lang.units.find((u) => u.id === route.unitId);
@@ -344,7 +334,7 @@
                 onComplete={finishLesson} onExit={() => go({ screen: 'path' })} />;
     }
     else if (route.screen === 'review') body = <window.ReviewSession queue={queue} xpPerCard={profile.xpPerCard} langId={langId} allChars={lang.allChars} onGo={go}
-                onExit={() => go({ screen: 'home' })} onComplete={() => { refresh(); go({ screen: 'home' }); }} />;
+                onExit={() => go({ screen: 'home' })} onComplete={(xp) => { addXp(xp); setSrsRev((r) => r + 1); go({ screen: 'home' }); }} />;
     // Flashcards: every character, shuffled, practice only (never touches the schedule)
     else if (route.screen === 'flashcards') body = <window.ReviewSession key={'fc' + langId} mode="practice" langId={langId} allChars={lang.allChars}
                 queue={flashDeck} onExit={() => go({ screen: 'home' })} onComplete={() => go({ screen: 'home' })} />;
@@ -382,13 +372,6 @@
           <span className="cc-streak" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
                          background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-pill)', fontSize: 'var(--fs-small)' }}>
             <window.Icon name="flame" size={15} style={{ color: 'var(--accent-review)' }} /> <b style={{ color: 'var(--accent-review)' }}>{profile.streak}</b></span>
-          {user && ADMIN_EMAILS.includes(String(user.email || '').toLowerCase()) && (
-            <a href="tools/Hub%20Audio.html" title="Developer tools (admin only)" className="cc-flex-desktop"
-              style={{ height: 34, alignItems: 'center', gap: 6, padding: '0 0.75rem', borderRadius: 'var(--radius-pill)', textDecoration: 'none',
-                       fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-small)', fontWeight: 700, color: 'var(--text-primary)',
-                       background: 'var(--bg-primary)', border: '1px dashed var(--border-color)' }}>
-              <window.Icon name="build" size={15} /> Dev tools</a>
-          )}
           {cloudReady && (
             <button type="button" onClick={() => go({ screen: user ? 'progress' : 'login' })}
               title={user ? `Signed in as ${user.email}` : 'Sign in'} aria-label={user ? 'Account' : 'Sign in'}
