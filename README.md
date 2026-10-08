@@ -1,6 +1,6 @@
 # Scriptura
 
-Script-learning app (Burmese, Tamil, Hindi, Japanese, …): trace, review, master.
+Script-learning app (Burmese, Thai, Tamil, Hindi, Japanese, …): trace, review, master.
 
 ## Run
 Double-click `run-scriptura.bat` (serves this folder at http://localhost:5144/), or open `index.html` from any static server.

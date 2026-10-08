@@ -18,6 +18,7 @@
   --font-japanese:   'Noto Sans JP', sans-serif;
   --font-korean:     'Noto Sans KR', sans-serif;
   --font-chinese:    'Noto Sans SC', sans-serif;
+  --font-thai:       'Noto Sans Thai', sans-serif;
 
   /* --- Weights --- */
   --fw-light:    300; /* @kind font */

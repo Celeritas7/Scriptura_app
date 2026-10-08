@@ -26,4 +26,5 @@ The app is live at https://celeritas7.github.io/Scriptura_app/
 
 ## Phase 9 — New script
 - Pick one: Korean (easiest), Thai (medium), Arabic (hardest: right-to-left, joined letters)
+- [x] Thai — 44 consonants in 6 groups with letter names and classes, Word Builder vowels (incl. left-side เ แ โ ไ), two concept cards (consonant class → tone; vowel placement), theme, Noto Sans Thai, catalogue resync
 - Letters, units, theme, concept card, database resync

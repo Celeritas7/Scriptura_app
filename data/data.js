@@ -13,6 +13,8 @@
       const chars = flat.slice(i, i + p.count).map((c) => ({
         char: c.char, roman: c.roman, name: c.name || c.roman, gloss: c.gloss || '',
         cognate: c.cognate || '', font,
+        // consonant class (Thai: mid / high / low) — only where the script has one
+        ...(c.cls ? { cls: c.cls } : {}),
       }));
       i += p.count;
       return { id: p.id || ('u' + idx), title: p.title, subtitle: p.subtitle || '',
@@ -253,6 +255,79 @@
     { id: 'nature', title: 'Nature & body', subtitle: '大 – 木', accent: 'indic', count: 10 },
   ];
 
+  // ============================ THAI ============================
+  // 44 consonants in dictionary order, grouped the Indic way (velar → labial,
+  // then the leftovers). Every letter carries its acrophonic name (ก ไก่ "ko
+  // kai", chicken) — that name is how Thais tell the five kho letters apart —
+  // plus its consonant class, which sets the tone (see the concept card).
+  // `cognate` is the Devanagari letter it descends from; '' marks a Thai
+  // innovation with no Indic parent.
+  const THA = f('thai');
+  const thaiRaw = [
+    // char, sound, name, gloss, cognate, class
+    ['ก', 'ko',  'ก ไก่',     'chicken',                 'क', 'mid'],
+    ['ข', 'kho', 'ข ไข่',     'egg',                     'ख', 'high'],
+    ['ฃ', 'kho', 'ฃ ขวด',     'bottle (no longer used)', '',  'high'],
+    ['ค', 'kho', 'ค ควาย',    'buffalo',                 'ग', 'low'],
+    ['ฅ', 'kho', 'ฅ คน',      'person (no longer used)', '',  'low'],
+    ['ฆ', 'kho', 'ฆ ระฆัง',   'bell',                    'घ', 'low'],
+    ['ง', 'ngo', 'ง งู',      'snake',                   'ङ', 'low'],
+    ['จ', 'cho', 'จ จาน',     'plate',                   'च', 'mid'],
+    ['ฉ', 'cho', 'ฉ ฉิ่ง',    'cymbals',                 'छ', 'high'],
+    ['ช', 'cho', 'ช ช้าง',    'elephant',                'ज', 'low'],
+    ['ซ', 'so',  'ซ โซ่',     'chain',                   '',  'low'],
+    ['ฌ', 'cho', 'ฌ เฌอ',     'tree',                    'झ', 'low'],
+    ['ญ', 'yo',  'ญ หญิง',    'woman',                   'ञ', 'low'],
+    ['ฎ', 'do',  'ฎ ชฎา',     'headdress',               '',  'mid'],
+    ['ฏ', 'to',  'ฏ ปฏัก',    'goad',                    'ट', 'mid'],
+    ['ฐ', 'tho', 'ฐ ฐาน',     'pedestal',                'ठ', 'high'],
+    ['ฑ', 'tho', 'ฑ มณโฑ',    'Montho (a Ramakien queen)', 'ड', 'low'],
+    ['ฒ', 'tho', 'ฒ ผู้เฒ่า',  'elder',                   'ढ', 'low'],
+    ['ณ', 'no',  'ณ เณร',     'novice monk',             'ण', 'low'],
+    ['ด', 'do',  'ด เด็ก',    'child',                   '',  'mid'],
+    ['ต', 'to',  'ต เต่า',    'turtle',                  'त', 'mid'],
+    ['ถ', 'tho', 'ถ ถุง',     'bag',                     'थ', 'high'],
+    ['ท', 'tho', 'ท ทหาร',    'soldier',                 'द', 'low'],
+    ['ธ', 'tho', 'ธ ธง',      'flag',                    'ध', 'low'],
+    ['น', 'no',  'น หนู',     'mouse',                   'न', 'low'],
+    ['บ', 'bo',  'บ ใบไม้',   'leaf',                    '',  'mid'],
+    ['ป', 'po',  'ป ปลา',     'fish',                    'प', 'mid'],
+    ['ผ', 'pho', 'ผ ผึ้ง',    'bee',                     'फ', 'high'],
+    ['ฝ', 'fo',  'ฝ ฝา',      'lid',                     '',  'high'],
+    ['พ', 'pho', 'พ พาน',     'tray',                    'ब', 'low'],
+    ['ฟ', 'fo',  'ฟ ฟัน',     'teeth',                   '',  'low'],
+    ['ภ', 'pho', 'ภ สำเภา',   'junk (sailing ship)',     'भ', 'low'],
+    ['ม', 'mo',  'ม ม้า',     'horse',                   'म', 'low'],
+    ['ย', 'yo',  'ย ยักษ์',   'giant',                   'य', 'low'],
+    ['ร', 'ro',  'ร เรือ',    'boat',                    'र', 'low'],
+    ['ล', 'lo',  'ล ลิง',     'monkey',                  'ल', 'low'],
+    ['ว', 'wo',  'ว แหวน',    'ring',                    'व', 'low'],
+    ['ศ', 'so',  'ศ ศาลา',    'pavilion',                'श', 'high'],
+    ['ษ', 'so',  'ษ ฤๅษี',    'hermit',                  'ष', 'high'],
+    ['ส', 'so',  'ส เสือ',    'tiger',                   'स', 'high'],
+    ['ห', 'ho',  'ห หีบ',     'chest (box)',             'ह', 'high'],
+    ['ฬ', 'lo',  'ฬ จุฬา',    'kite',                    'ळ', 'low'],
+    ['อ', 'o',   'อ อ่าง',    'basin',                   'अ', 'mid'],
+    ['ฮ', 'ho',  'ฮ นกฮูก',   'owl',                     '',  'low'],
+  ];
+  const thaiFlat = thaiRaw.map(([char, roman, name, gloss, cognate, cls]) => ({ char, roman, name, gloss, cognate, cls }));
+  const thaiPlan = [
+    { id: 'ka',   title: 'Ko group',      subtitle: 'Velar · ก–ง',      accent: 'practice', count: 7 },
+    { id: 'cha',  title: 'Cho group',     subtitle: 'Palatal · จ–ญ',    accent: 'quiz',     count: 6 },
+    { id: 'tta',  title: 'Do group',      subtitle: 'Retroflex · ฎ–ณ',  accent: 'sheet',    count: 6 },
+    { id: 'ta',   title: 'Do group',      subtitle: 'Dental · ด–น',     accent: 'review',   count: 6 },
+    { id: 'pa',   title: 'Bo group',      subtitle: 'Labial · บ–ม',     accent: 'indic',    count: 8 },
+    { id: 'misc', title: 'Miscellaneous', subtitle: 'Semivowels, sibilants & อ ฮ', accent: 'cjk', count: 11 },
+  ];
+  // Thai vowels are written around the consonant: `pre` is the part drawn to
+  // its left (Unicode stores it first), `sign` the part drawn after/above/below.
+  const thaiVowels = [
+    { sign: 'ะ', label: 'a' }, { sign: 'า', label: 'ā' }, { sign: 'ิ', label: 'i' }, { sign: 'ี', label: 'ī' },
+    { sign: 'ึ', label: 'ue' }, { sign: 'ุ', label: 'u' }, { sign: 'ู', label: 'ū' },
+    { pre: 'เ', sign: '', label: 'ē' }, { pre: 'แ', sign: '', label: 'ae' }, { pre: 'โ', sign: '', label: 'ō' },
+    { pre: 'ไ', sign: '', label: 'ai' }, { sign: 'ำ', label: 'am' }, { pre: 'เ', sign: 'า', label: 'ao' },
+  ];
+
   // ---- assemble languages ----
   function lang(id, name, native, scriptKey, group, units, vowels) {
     // startIndex lets a unit map its Nth character to the language-wide index
@@ -275,6 +350,7 @@
     katakana: lang('katakana', 'Katakana', 'カタカナ', 'japanese', 'East Asian', makeUnits(kataFlat, kanaPlan(['ア','カ','サ','タ','ナ','ハ','マ','ヤ','ラ','ワ']), f('japanese'))),
     korean: lang('korean', 'Korean', '한국어', 'korean', 'East Asian', makeUnits(korFlat, korPlan, f('korean'))),
     chinese: lang('chinese', 'Chinese', '汉字', 'chinese', 'East Asian', makeUnits(zhFlat, zhPlan, f('chinese'))),
+    thai: lang('thai', 'Thai', 'ไทย', 'thai', 'Southeast Asian', makeUnits(thaiFlat, thaiPlan, THA), thaiVowels),
   };
 
   // ============================ CONCEPT CARDS ============================
@@ -529,6 +605,42 @@
     ['ハ', 'パ', ['パ', 'ン'], ['pa', 'n'], 'bread', 'p', R.p],
   ]));
 
+  // Thai: the consonant class is what a learner must notice — it sets the tone.
+  attach('thai', 'ka', {
+    id: 'thai-consonant-class', glyph: 'ก', font: THA, title: 'Three classes decide the tone',
+    blurb: 'Thai sorts every consonant into a class — mid, high or low. The class, not the letter’s sound, sets the tone of the syllable it starts.',
+    note: 'Read once before the Ko group',
+    positions: [
+      { id: 'mid', tab: 'ก mid', sound: 'k', ipa: '/k/', rule: 'Mid class: ก จ ฎ ฏ ด ต บ ป อ. With no tone mark, an open syllable is said level: กา is kā, mid tone.',
+        parts: seg(['กา']), roman: seg(['kā']), mean: 'crow' },
+      { id: 'high', tab: 'ข high', sound: 'kh', ipa: '/kʰ/', rule: 'High class: ข ฃ ฉ ฐ ถ ผ ฝ ศ ษ ส ห. The same shape rises: ขา is khǎ, rising tone.',
+        parts: seg(['ขา']), roman: seg(['khǎ']), mean: 'leg' },
+      { id: 'low', tab: 'ค low', sound: 'kh', ipa: '/kʰ/', rule: 'Low class: every other letter (ค ฆ ง ช ซ ฌ ญ ฑ ฒ ณ ท ธ น พ ฟ ภ ม ย ร ล ว ฬ ฮ). คา sounds just like ขา but is khā, mid tone — the class is the only difference.',
+        parts: seg(['คา']), roman: seg(['khā']), mean: 'to be stuck' },
+    ],
+    contrast: { from: { text: 'क ख ग घ', font: DEV, label: 'Hindi · 4 sounds' }, to: { text: 'ก ข ค ฆ', label: 'Thai · 2 sounds, 3 classes' },
+      note: 'Thai lost the voiced g and gh, so ค and ฆ now sound like ข. The old difference survives as consonant class — and class is what sets the tone.' },
+  });
+  attach('thai', 'cha', {
+    id: 'thai-vowel-order', glyph: 'เ', font: THA, title: 'Written first, read after',
+    blurb: 'Thai vowels sit to the left, right, above or below the consonant — some wrap around it. Say the consonant first, whatever the picture shows.',
+    note: 'Read once before the Cho group',
+    positions: [
+      { id: 'before', tab: 'เ◌ on the left', sound: 'ē', ipa: '/eː/', rule: 'เ is written before the letter but read after it: เท is thē, not e-tha.',
+        parts: seg(['เท']), roman: seg(['thē']), mean: 'to pour' },
+      { id: 'after', tab: '◌า on the right', sound: 'ā', ipa: '/aː/', rule: 'า follows the letter, the way Roman letters do: มา is mā.',
+        parts: seg(['มา']), roman: seg(['mā']), mean: 'to come' },
+      { id: 'above', tab: '◌ี on top', sound: 'ī', ipa: '/iː/', rule: 'ิ and ี sit on top of the letter: ดี is dī.',
+        parts: seg(['ดี']), roman: seg(['dī']), mean: 'good' },
+      { id: 'below', tab: '◌ู below', sound: 'ū', ipa: '/uː/', rule: 'ุ and ู hang underneath: ปู is pū.',
+        parts: seg(['ปู']), roman: seg(['pū']), mean: 'crab' },
+      { id: 'around', tab: 'เ◌า around', sound: 'ao', ipa: '/aw/', rule: 'เ on the left plus า on the right wrap the letter: เรา is rao.',
+        parts: seg(['เรา']), roman: seg(['rao']), mean: 'we' },
+    ],
+    contrast: { from: { text: 'เ + ท', font: THA, label: 'drawn & typed' }, to: { text: 'เท', label: 'read: thē' },
+      note: 'Unlike Burmese, Thai keyboards type what you see: press เ first, then the consonant. Reading order still puts the consonant first.' },
+  });
+
   // Per-language visual identity — signature color, native greeting, emblem,
   // and a watermark glyph. Gives each script a distinct dashboard & card look.
   const themes = {
@@ -541,6 +653,7 @@
     katakana: { color: '#6366f1', color2: '#4338ca', greeting: 'コンニチハ',   hello: 'Konnichiwa', emblem: '⛩️', motif: 'カ', blurb: 'Syllabary · 46 kana' },
     korean:   { color: '#3b82f6', color2: '#1d4ed8', greeting: '안녕하세요',   hello: 'Annyeong',   emblem: '☯',  motif: '한', blurb: 'Hangul · 19 consonants' },
     chinese:  { color: '#e11d48', color2: '#9f1239', greeting: '你好',         hello: 'Nǐ hǎo',     emblem: '🏮', motif: '汉', blurb: 'Logographic · starter set' },
+    thai:     { color: '#f97316', color2: '#c2410c', greeting: 'สวัสดี',       hello: 'Sawatdi',    emblem: '🐘', motif: 'ก', blurb: 'Abugida · 44 consonants' },
   };
 
   window.ScripturaData = {
@@ -556,6 +669,7 @@
       { id: 'katakana', name: 'Katakana', native: 'カタカナ', font: f('japanese'), group: 'East Asian' },
       { id: 'korean', name: 'Korean', native: '한국어', font: f('korean'), group: 'East Asian' },
       { id: 'chinese', name: 'Chinese', native: '汉字', font: f('chinese'), group: 'East Asian' },
+      { id: 'thai', name: 'Thai', native: 'ไทย', font: f('thai'), group: 'Southeast Asian' },
     ],
     defaultLang: 'burmese',
     // Learner numbers (learned, XP, level, streak) are derived from the review

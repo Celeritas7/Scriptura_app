@@ -87,6 +87,7 @@ details{margin-top:6px}
     katakana: ['ja-JP', ['ja-JP-NanamiNeural', 'ja-JP-KeitaNeural']],
     korean: ['ko-KR', ['ko-KR-SunHiNeural', 'ko-KR-InJoonNeural']],
     chinese: ['zh-CN', ['zh-CN-XiaoxiaoNeural', 'zh-CN-YunxiNeural']],
+    thai: ['th-TH', ['th-TH-PremwadeeNeural', 'th-TH-NiwatNeural']],
   };
   // Same key the app computes (lib/speech.js): code points in hex, dash-joined.
   const keyOf = (t) => [...String(t).normalize('NFC')].map((c) => c.codePointAt(0).toString(16)).join('-');

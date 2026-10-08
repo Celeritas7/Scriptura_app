@@ -98,6 +98,7 @@ function LessonView({ unit, learned, onComplete, onExit, xpPerCard = 5, langId }
             <div style={{ fontSize: '3rem', fontWeight: 700, color: accent }}>{c.roman}</div>
             {c.name && c.name !== c.roman && <div style={{ fontFamily: unit.font, fontSize: 'var(--fs-title)', marginTop: 4 }}>{c.name}</div>}
             {c.gloss && <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>“{c.gloss}”</div>}
+            {c.cls && <div style={{ marginTop: 4, fontSize: 'var(--fs-hint)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-tight)' }}>{c.cls} class</div>}
             {c.cognate && (
             <div style={{ marginTop: 'var(--space-5)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'var(--fs-small)', color: 'var(--text-secondary)' }}>
               <span style={{ fontFamily: 'var(--font-devanagari)', fontSize: '1.4rem', color: 'var(--text-primary)' }}>{c.cognate}</span> Devanagari cognate
