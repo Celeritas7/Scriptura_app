@@ -11,6 +11,7 @@
 --   • no_vowel_sign — letters the Word Builder must skip
 --   • vowel.pre    — the part of a vowel written to the LEFT of the consonant (Thai เ แ โ ไ)
 --   • Thai — 44 consonants in 6 groups, two concept cards
+--   • Kannada — 34 consonants in the Hindi grid, vowel-sign concept card
 -- Progress (scriptura_app_sheet_stats) is keyed by language + char_index and
 -- is NOT touched.
 -- Supersedes scriptura_app_fix_tamil_hindi.sql and scriptura_app_add_sinhala.sql.
@@ -537,5 +538,63 @@ insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values (
 insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','','ai',NULL,10,'ไ');
 insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ำ','am',NULL,11,NULL);
 insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','า','ao',NULL,12,'เ');
+
+-- ---------- Kannada (34 characters, 6 units) ----------
+insert into scriptura_app_languages (id,name,native,grp,font,sort) values ('kannada','Kannada','ಕನ್ನಡ','South Asian','var(--font-kannada)',10) on conflict (id) do update set name=excluded.name, native=excluded.native, grp=excluded.grp, font=excluded.font, sort=excluded.sort;
+delete from scriptura_app_characters where language_id='kannada';
+delete from scriptura_app_vowels where language_id='kannada';
+delete from scriptura_app_units where language_id='kannada';
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_ka','kannada','Ka group','Velar','practice',0,NULL,'{"id":"kannada-vowel-signs","glyph":"ಕ","font":"var(--font-kannada)","title":"Vowel signs sit on the letter","blurb":"Like Hindi, every Kannada letter carries a built-in a. A vowel sign changes it, and many signs reshape the curved stroke on top.","note":"Read once before the Ka group","positions":[{"id":"bare","tab":"ಕ","sound":"ka","ipa":"/ka/","rule":"The curved stroke on top (ತಲೆಕಟ್ಟು, talekaṭṭu) marks the built-in a.","parts":[{"t":"ಕ","hi":1},{"t":"ಮಲ"}],"roman":[{"t":"ka","hi":1},{"t":"mala"}],"mean":"lotus"},{"id":"aa","tab":"ಕಾ","sound":"kā","ipa":"/kaː/","rule":"Long ā: a hook joins the top on the right.","parts":[{"t":"ಕಾ","hi":1},{"t":"ಗೆ"}],"roman":[{"t":"kā","hi":1},{"t":"ge"}],"mean":"crow"},{"id":"i","tab":"ಕಿ","sound":"ki","ipa":"/ki/","rule":"i: the top stroke becomes a small curl.","parts":[{"t":"ಕಿ","hi":1},{"t":"ವಿ"}],"roman":[{"t":"ki","hi":1},{"t":"vi"}],"mean":"ear"},{"id":"u","tab":"ಕು","sound":"ku","ipa":"/ku/","rule":"u and ū hang off the right side, and the top stroke stays.","parts":[{"t":"ಕು","hi":1},{"t":"ರಿ"}],"roman":[{"t":"ku","hi":1},{"t":"ri"}],"mean":"sheep"},{"id":"e","tab":"ಕೆ","sound":"ke","ipa":"/ke/","rule":"e and o signs attach at the top right: ಕೆ ke, ಕೊ ko.","parts":[{"t":"ಕೆ","hi":1},{"t":"ರೆ"}],"roman":[{"t":"ke","hi":1},{"t":"re"}],"mean":"lake"}],"contrast":{"from":{"text":"కి కు","font":"var(--font-telugu)","label":"Telugu"},"to":{"text":"ಕಿ ಕು","label":"Kannada"},"note":"Kannada and Telugu grew from the same old script, so many letters are near twins. If you know one, the other reads quickly."}}'::jsonb);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_sa','kannada','Sa group','Palatal','quiz',1,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_tta','kannada','Ta group','Retroflex','sheet',2,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_ta','kannada','Ta group','Dental','review',3,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_pa','kannada','Pa group','Labial','indic',4,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_misc','kannada','Miscellaneous','Semivowels & sibilants','cjk',5,NULL,NULL);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',0,'ಕ','ka','ka','','क',0,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',1,'ಖ','kha','kha','','ख',1,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',2,'ಗ','ga','ga','','ग',2,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',3,'ಘ','gha','gha','','घ',3,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',4,'ಙ','ṅa','ṅa','','ङ',4,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',5,'ಚ','ca','ca','','च',5,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',6,'ಛ','cha','cha','','छ',6,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',7,'ಜ','ja','ja','','ज',7,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',8,'ಝ','jha','jha','','झ',8,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',9,'ಞ','ña','ña','','ञ',9,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',10,'ಟ','ṭa','ṭa','','ट',10,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',11,'ಠ','ṭha','ṭha','','ठ',11,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',12,'ಡ','ḍa','ḍa','','ड',12,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',13,'ಢ','ḍha','ḍha','','ढ',13,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',14,'ಣ','ṇa','ṇa','','ण',14,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',15,'ತ','ta','ta','','त',15,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',16,'ಥ','tha','tha','','थ',16,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',17,'ದ','da','da','','द',17,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',18,'ಧ','dha','dha','','ध',18,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',19,'ನ','na','na','','न',19,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',20,'ಪ','pa','pa','','प',20,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',21,'ಫ','pha','pha','','फ',21,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',22,'ಬ','ba','ba','','ब',22,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',23,'ಭ','bha','bha','','भ',23,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',24,'ಮ','ma','ma','','म',24,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',25,'ಯ','ya','ya','','य',25,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',26,'ರ','ra','ra','','र',26,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',27,'ಲ','la','la','','ल',27,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',28,'ವ','va','va','','व',28,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',29,'ಶ','śa','śa','','श',29,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',30,'ಷ','ṣa','ṣa','','ष',30,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',31,'ಸ','sa','sa','','स',31,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',32,'ಹ','ha','ha','','ह',32,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',33,'ಳ','ḷa','ḷa','','ळ',33,false);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ಾ','ā',NULL,0,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ಿ','i',NULL,1,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೀ','ī',NULL,2,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ು','u',NULL,3,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೂ','ū',NULL,4,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೃ','ṛ',NULL,5,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೆ','e',NULL,6,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೇ','ē',NULL,7,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೈ','ai',NULL,8,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೊ','o',NULL,9,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೋ','ō',NULL,10,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೌ','au',NULL,11,NULL);
 
 commit;

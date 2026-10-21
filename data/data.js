@@ -255,6 +255,18 @@
     { id: 'nature', title: 'Nature & body', subtitle: '大 – 木', accent: 'indic', count: 10 },
   ];
 
+  // ============================ KANNADA ============================
+  // 34 consonants in the Hindi order, so each one maps 1:1 to its Devanagari
+  // cognate (first 34 letters of hindiFlat: क … ह ळ).
+  const kannadaFlat = 'ಕ ಖ ಗ ಘ ಙ ಚ ಛ ಜ ಝ ಞ ಟ ಠ ಡ ಢ ಣ ತ ಥ ದ ಧ ನ ಪ ಫ ಬ ಭ ಮ ಯ ರ ಲ ವ ಶ ಷ ಸ ಹ ಳ'.split(' ')
+    .map((ch, i) => ({ char: ch, roman: hindiFlat[i].roman, cognate: hindiFlat[i].char }));
+  const kannadaVowels = [
+    { sign: 'ಾ', label: 'ā' }, { sign: 'ಿ', label: 'i' }, { sign: 'ೀ', label: 'ī' },
+    { sign: 'ು', label: 'u' }, { sign: 'ೂ', label: 'ū' }, { sign: 'ೃ', label: 'ṛ' },
+    { sign: 'ೆ', label: 'e' }, { sign: 'ೇ', label: 'ē' }, { sign: 'ೈ', label: 'ai' },
+    { sign: 'ೊ', label: 'o' }, { sign: 'ೋ', label: 'ō' }, { sign: 'ೌ', label: 'au' },
+  ];
+
   // ============================ THAI ============================
   // 44 consonants in dictionary order, grouped the Indic way (velar → labial,
   // then the leftovers). Every letter carries its acrophonic name (ก ไก่ "ko
@@ -351,6 +363,7 @@
     korean: lang('korean', 'Korean', '한국어', 'korean', 'East Asian', makeUnits(korFlat, korPlan, f('korean'))),
     chinese: lang('chinese', 'Chinese', '汉字', 'chinese', 'East Asian', makeUnits(zhFlat, zhPlan, f('chinese'))),
     thai: lang('thai', 'Thai', 'ไทย', 'thai', 'Southeast Asian', makeUnits(thaiFlat, thaiPlan, THA), thaiVowels),
+    kannada: lang('kannada', 'Kannada', 'ಕನ್ನಡ', 'kannada', 'South Asian', makeUnits(kannadaFlat, indicPlan(9), f('kannada')), kannadaVowels),
   };
 
   // ============================ CONCEPT CARDS ============================
@@ -454,6 +467,28 @@
     ],
     contrast: { from: { text: 'कि कु', font: DEV, label: 'Hindi · signs around' }, to: { text: 'కి కు', label: 'Telugu · signs on top' },
       note: 'Same system as Hindi, different placement. Look at the top of the letter first — that is where the vowel usually is.' },
+  });
+
+  // Kannada: vowel signs, contrasted with its near-twin Telugu.
+  const KAN = f('kannada');
+  attach('kannada', 'ka', {
+    id: 'kannada-vowel-signs', glyph: 'ಕ', font: KAN, title: 'Vowel signs sit on the letter',
+    blurb: 'Like Hindi, every Kannada letter carries a built-in a. A vowel sign changes it, and many signs reshape the curved stroke on top.',
+    note: 'Read once before the Ka group',
+    positions: [
+      { id: 'bare', tab: 'ಕ', sound: 'ka', ipa: '/ka/', rule: 'The curved stroke on top (ತಲೆಕಟ್ಟು, talekaṭṭu) marks the built-in a.',
+        parts: seg(['ಕ'], 'ಮಲ'), roman: seg(['ka'], 'mala'), mean: 'lotus' },
+      { id: 'aa', tab: 'ಕಾ', sound: 'kā', ipa: '/kaː/', rule: 'Long ā: a hook joins the top on the right.',
+        parts: seg(['ಕಾ'], 'ಗೆ'), roman: seg(['kā'], 'ge'), mean: 'crow' },
+      { id: 'i', tab: 'ಕಿ', sound: 'ki', ipa: '/ki/', rule: 'i: the top stroke becomes a small curl.',
+        parts: seg(['ಕಿ'], 'ವಿ'), roman: seg(['ki'], 'vi'), mean: 'ear' },
+      { id: 'u', tab: 'ಕು', sound: 'ku', ipa: '/ku/', rule: 'u and ū hang off the right side, and the top stroke stays.',
+        parts: seg(['ಕು'], 'ರಿ'), roman: seg(['ku'], 'ri'), mean: 'sheep' },
+      { id: 'e', tab: 'ಕೆ', sound: 'ke', ipa: '/ke/', rule: 'e and o signs attach at the top right: ಕೆ ke, ಕೊ ko.',
+        parts: seg(['ಕೆ'], 'ರೆ'), roman: seg(['ke'], 're'), mean: 'lake' },
+    ],
+    contrast: { from: { text: 'కి కు', font: TEL, label: 'Telugu' }, to: { text: 'ಕಿ ಕು', label: 'Kannada' },
+      note: 'Kannada and Telugu grew from the same old script, so many letters are near twins. If you know one, the other reads quickly.' },
   });
 
   // Burmese: one reading rule per consonant group, in the order learners meet them.
@@ -653,6 +688,7 @@
     katakana: { color: '#6366f1', color2: '#4338ca', greeting: 'コンニチハ',   hello: 'Konnichiwa', emblem: '⛩️', motif: 'カ', blurb: 'Syllabary · 46 kana' },
     korean:   { color: '#3b82f6', color2: '#1d4ed8', greeting: '안녕하세요',   hello: 'Annyeong',   emblem: '☯',  motif: '한', blurb: 'Hangul · 19 consonants' },
     chinese:  { color: '#e11d48', color2: '#9f1239', greeting: '你好',         hello: 'Nǐ hǎo',     emblem: '🏮', motif: '汉', blurb: 'Logographic · starter set' },
+    kannada:  { color: '#eab308', color2: '#a16207', greeting: 'ನಮಸ್ಕಾರ',     hello: 'Namaskāra',  emblem: '🌼', motif: 'ಕ', blurb: 'Abugida · 34 consonants' },
     thai:     { color: '#f97316', color2: '#c2410c', greeting: 'สวัสดี',       hello: 'Sawatdi',    emblem: '🐘', motif: 'ก', blurb: 'Abugida · 44 consonants' },
   };
 
@@ -670,6 +706,7 @@
       { id: 'korean', name: 'Korean', native: '한국어', font: f('korean'), group: 'East Asian' },
       { id: 'chinese', name: 'Chinese', native: '汉字', font: f('chinese'), group: 'East Asian' },
       { id: 'thai', name: 'Thai', native: 'ไทย', font: f('thai'), group: 'Southeast Asian' },
+      { id: 'kannada', name: 'Kannada', native: 'ಕನ್ನಡ', font: f('kannada'), group: 'South Asian' },
     ],
     defaultLang: 'burmese',
     // Learner numbers (learned, XP, level, streak) are derived from the review
