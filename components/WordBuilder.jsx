@@ -1,5 +1,7 @@
 // WordBuilder — pick a consonant and a vowel sign; see them combine into a
-// live Burmese syllable with its romanization. A playful, exploratory mode.
+// live syllable with its romanization. A playful, exploratory mode.
+// A vowel may carry `pre`: the part written to the LEFT of the consonant
+// (Thai เ แ โ ไ, stored before the consonant in Unicode).
 function WordBuilder({ lang }) {
   const { Card } = window.ScripturaDesignSystem_72b484;
   // Only consonants take vowel signs: skip independent vowels, āytam, and pre-composed ligatures.
@@ -16,8 +18,10 @@ function WordBuilder({ lang }) {
 
   const c = consonants[ci];
   const v = lang.vowels[vi];
-  const syllable = c.char + v.sign;
-  const roman = c.roman.replace(/a$/, '') + v.label;
+  const pre = v.pre || '';
+  const syllable = pre + c.char + v.sign;
+  // strip the inherent vowel of the letter's reading (Burmese/Tamil 'ka', Thai 'ko')
+  const roman = c.roman.replace(/[ao]$/, '') + v.label;
   const SF = lang.font;
 
   const Chip = ({ active, accent, onClick, children, font }) => (
@@ -40,7 +44,7 @@ function WordBuilder({ lang }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', fontFamily: SF, color: 'var(--text-secondary)' }}>
           <span style={{ fontSize: '3.5rem', color: 'var(--text-primary)' }}>{c.char}</span>
           <span style={{ fontSize: '2rem' }}>+</span>
-          <span style={{ fontSize: '3.5rem', color: 'var(--text-primary)' }}>{v.sign}</span>
+          <span style={{ fontSize: '3.5rem', color: 'var(--text-primary)' }}>{pre ? pre + '◌' + v.sign : v.sign}</span>
           <span style={{ fontSize: '2rem' }}>=</span>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -69,7 +73,7 @@ function WordBuilder({ lang }) {
                        color: idx === vi ? 'var(--text-on-accent)' : 'var(--text-primary)',
                        border: `1px solid ${idx === vi ? 'transparent' : 'var(--border-color)'}`,
                        boxShadow: idx === vi ? 'var(--glow-sheet)' : 'none', transition: 'all var(--dur-fast) var(--ease)' }}>
-              <span style={{ fontFamily: SF, fontSize: '1.5rem' }}>◌{vv.sign}</span>
+              <span style={{ fontFamily: SF, fontSize: '1.5rem' }}>{vv.pre || ''}◌{vv.sign}</span>
               <span style={{ fontSize: 'var(--fs-hint)', opacity: 0.85 }}>{vv.label}</span>
             </button>
           ))}

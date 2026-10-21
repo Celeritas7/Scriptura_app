@@ -1,5 +1,5 @@
 -- ============================================================
--- Scriptura — full catalogue resync, generated from ui_kits/scriptura/data.js
+-- Scriptura — full catalogue resync, generated from data/data.js
 -- Run once in Supabase → SQL editor. Safe to re-run (idempotent).
 --
 -- Replaces the content rows (languages / units / characters / vowels) for
@@ -9,6 +9,9 @@
 --   • unit.slots   — grid positions for honest gaps on the practice sheet
 --   • unit.concept — read-once concept cards (Tamil, Burmese stacking, kana dakuten)
 --   • no_vowel_sign — letters the Word Builder must skip
+--   • vowel.pre    — the part of a vowel written to the LEFT of the consonant (Thai เ แ โ ไ)
+--   • Thai — 44 consonants in 6 groups, two concept cards
+--   • Kannada — 34 consonants in the Hindi grid, vowel-sign concept card
 -- Progress (scriptura_app_sheet_stats) is keyed by language + char_index and
 -- is NOT touched.
 -- Supersedes scriptura_app_fix_tamil_hindi.sql and scriptura_app_add_sinhala.sql.
@@ -19,6 +22,7 @@ begin;
 alter table scriptura_app_units      add column if not exists slots   jsonb;
 alter table scriptura_app_units      add column if not exists concept jsonb;
 alter table scriptura_app_characters add column if not exists no_vowel_sign boolean default false;
+alter table scriptura_app_vowels     add column if not exists pre     text;
 
 -- ---------- Burmese (33 characters, 6 units) ----------
 insert into scriptura_app_languages (id,name,native,grp,font,sort) values ('burmese','Burmese','မြန်မာ','Southeast Asian','var(--font-burmese)',0) on conflict (id) do update set name=excluded.name, native=excluded.native, grp=excluded.grp, font=excluded.font, sort=excluded.sort;
@@ -464,5 +468,133 @@ insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,
 insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('chinese','chinese_nature',17,'水','shuǐ','shuǐ','water','',17,false);
 insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('chinese','chinese_nature',18,'火','huǒ','huǒ','fire','',18,false);
 insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('chinese','chinese_nature',19,'木','mù','mù','wood','',19,false);
+
+
+-- ---------- Thai (44 characters, 6 units) ----------
+insert into scriptura_app_languages (id,name,native,grp,font,sort) values ('thai','Thai','ไทย','Southeast Asian','var(--font-thai)',9) on conflict (id) do update set name=excluded.name, native=excluded.native, grp=excluded.grp, font=excluded.font, sort=excluded.sort;
+delete from scriptura_app_characters where language_id='thai';
+delete from scriptura_app_vowels where language_id='thai';
+delete from scriptura_app_units where language_id='thai';
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_ka','thai','Ko group','Velar · ก–ง','practice',0,NULL,'{"id":"thai-consonant-class","glyph":"ก","font":"var(--font-thai)","title":"Three classes decide the tone","blurb":"Thai sorts every consonant into a class — mid, high or low. The class, not the letter’s sound, sets the tone of the syllable it starts.","note":"Read once before the Ko group","positions":[{"id":"mid","tab":"ก mid","sound":"k","ipa":"/k/","rule":"Mid class: ก จ ฎ ฏ ด ต บ ป อ. With no tone mark, an open syllable is said level: กา is kā, mid tone.","parts":[{"t":"กา","hi":1}],"roman":[{"t":"kā","hi":1}],"mean":"crow"},{"id":"high","tab":"ข high","sound":"kh","ipa":"/kʰ/","rule":"High class: ข ฃ ฉ ฐ ถ ผ ฝ ศ ษ ส ห. The same shape rises: ขา is khǎ, rising tone.","parts":[{"t":"ขา","hi":1}],"roman":[{"t":"khǎ","hi":1}],"mean":"leg"},{"id":"low","tab":"ค low","sound":"kh","ipa":"/kʰ/","rule":"Low class: every other letter (ค ฆ ง ช ซ ฌ ญ ฑ ฒ ณ ท ธ น พ ฟ ภ ม ย ร ล ว ฬ ฮ). คา sounds just like ขา but is khā, mid tone — the class is the only difference.","parts":[{"t":"คา","hi":1}],"roman":[{"t":"khā","hi":1}],"mean":"to be stuck"}],"contrast":{"from":{"text":"क ख ग घ","font":"var(--font-devanagari)","label":"Hindi · 4 sounds"},"to":{"text":"ก ข ค ฆ","label":"Thai · 2 sounds, 3 classes"},"note":"Thai lost the voiced g and gh, so ค and ฆ now sound like ข. The old difference survives as consonant class — and class is what sets the tone."}}'::jsonb);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_cha','thai','Cho group','Palatal · จ–ญ','quiz',1,NULL,'{"id":"thai-vowel-order","glyph":"เ","font":"var(--font-thai)","title":"Written first, read after","blurb":"Thai vowels sit to the left, right, above or below the consonant — some wrap around it. Say the consonant first, whatever the picture shows.","note":"Read once before the Cho group","positions":[{"id":"before","tab":"เ◌ on the left","sound":"ē","ipa":"/eː/","rule":"เ is written before the letter but read after it: เท is thē, not e-tha.","parts":[{"t":"เท","hi":1}],"roman":[{"t":"thē","hi":1}],"mean":"to pour"},{"id":"after","tab":"◌า on the right","sound":"ā","ipa":"/aː/","rule":"า follows the letter, the way Roman letters do: มา is mā.","parts":[{"t":"มา","hi":1}],"roman":[{"t":"mā","hi":1}],"mean":"to come"},{"id":"above","tab":"◌ี on top","sound":"ī","ipa":"/iː/","rule":"ิ and ี sit on top of the letter: ดี is dī.","parts":[{"t":"ดี","hi":1}],"roman":[{"t":"dī","hi":1}],"mean":"good"},{"id":"below","tab":"◌ู below","sound":"ū","ipa":"/uː/","rule":"ุ and ู hang underneath: ปู is pū.","parts":[{"t":"ปู","hi":1}],"roman":[{"t":"pū","hi":1}],"mean":"crab"},{"id":"around","tab":"เ◌า around","sound":"ao","ipa":"/aw/","rule":"เ on the left plus า on the right wrap the letter: เรา is rao.","parts":[{"t":"เรา","hi":1}],"roman":[{"t":"rao","hi":1}],"mean":"we"}],"contrast":{"from":{"text":"เ + ท","font":"var(--font-thai)","label":"drawn & typed"},"to":{"text":"เท","label":"read: thē"},"note":"Unlike Burmese, Thai keyboards type what you see: press เ first, then the consonant. Reading order still puts the consonant first."}}'::jsonb);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_tta','thai','Do group','Retroflex · ฎ–ณ','sheet',2,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_ta','thai','Do group','Dental · ด–น','review',3,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_pa','thai','Bo group','Labial · บ–ม','indic',4,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('thai_misc','thai','Miscellaneous','Semivowels, sibilants & อ ฮ','cjk',5,NULL,NULL);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',0,'ก','ko','ก ไก่','chicken','क',0,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',1,'ข','kho','ข ไข่','egg','ख',1,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',2,'ฃ','kho','ฃ ขวด','bottle (no longer used)','',2,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',3,'ค','kho','ค ควาย','buffalo','ग',3,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',4,'ฅ','kho','ฅ คน','person (no longer used)','',4,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',5,'ฆ','kho','ฆ ระฆัง','bell','घ',5,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ka',6,'ง','ngo','ง งู','snake','ङ',6,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',7,'จ','cho','จ จาน','plate','च',7,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',8,'ฉ','cho','ฉ ฉิ่ง','cymbals','छ',8,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',9,'ช','cho','ช ช้าง','elephant','ज',9,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',10,'ซ','so','ซ โซ่','chain','',10,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',11,'ฌ','cho','ฌ เฌอ','tree','झ',11,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_cha',12,'ญ','yo','ญ หญิง','woman','ञ',12,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',13,'ฎ','do','ฎ ชฎา','headdress','',13,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',14,'ฏ','to','ฏ ปฏัก','goad','ट',14,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',15,'ฐ','tho','ฐ ฐาน','pedestal','ठ',15,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',16,'ฑ','tho','ฑ มณโฑ','Montho (a Ramakien queen)','ड',16,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',17,'ฒ','tho','ฒ ผู้เฒ่า','elder','ढ',17,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_tta',18,'ณ','no','ณ เณร','novice monk','ण',18,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',19,'ด','do','ด เด็ก','child','',19,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',20,'ต','to','ต เต่า','turtle','त',20,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',21,'ถ','tho','ถ ถุง','bag','थ',21,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',22,'ท','tho','ท ทหาร','soldier','द',22,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',23,'ธ','tho','ธ ธง','flag','ध',23,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_ta',24,'น','no','น หนู','mouse','न',24,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',25,'บ','bo','บ ใบไม้','leaf','',25,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',26,'ป','po','ป ปลา','fish','प',26,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',27,'ผ','pho','ผ ผึ้ง','bee','फ',27,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',28,'ฝ','fo','ฝ ฝา','lid','',28,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',29,'พ','pho','พ พาน','tray','ब',29,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',30,'ฟ','fo','ฟ ฟัน','teeth','',30,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',31,'ภ','pho','ภ สำเภา','junk (sailing ship)','भ',31,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_pa',32,'ม','mo','ม ม้า','horse','म',32,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',33,'ย','yo','ย ยักษ์','giant','य',33,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',34,'ร','ro','ร เรือ','boat','र',34,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',35,'ล','lo','ล ลิง','monkey','ल',35,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',36,'ว','wo','ว แหวน','ring','व',36,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',37,'ศ','so','ศ ศาลา','pavilion','श',37,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',38,'ษ','so','ษ ฤๅษี','hermit','ष',38,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',39,'ส','so','ส เสือ','tiger','स',39,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',40,'ห','ho','ห หีบ','chest (box)','ह',40,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',41,'ฬ','lo','ฬ จุฬา','kite','ळ',41,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',42,'อ','o','อ อ่าง','basin','अ',42,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('thai','thai_misc',43,'ฮ','ho','ฮ นกฮูก','owl','',43,false);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ะ','a',NULL,0,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','า','ā',NULL,1,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ิ','i',NULL,2,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ี','ī',NULL,3,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ึ','ue',NULL,4,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ุ','u',NULL,5,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ู','ū',NULL,6,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','','ē',NULL,7,'เ');
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','','ae',NULL,8,'แ');
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','','ō',NULL,9,'โ');
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','','ai',NULL,10,'ไ');
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','ำ','am',NULL,11,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('thai','า','ao',NULL,12,'เ');
+
+-- ---------- Kannada (34 characters, 6 units) ----------
+insert into scriptura_app_languages (id,name,native,grp,font,sort) values ('kannada','Kannada','ಕನ್ನಡ','South Asian','var(--font-kannada)',10) on conflict (id) do update set name=excluded.name, native=excluded.native, grp=excluded.grp, font=excluded.font, sort=excluded.sort;
+delete from scriptura_app_characters where language_id='kannada';
+delete from scriptura_app_vowels where language_id='kannada';
+delete from scriptura_app_units where language_id='kannada';
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_ka','kannada','Ka group','Velar','practice',0,NULL,'{"id":"kannada-vowel-signs","glyph":"ಕ","font":"var(--font-kannada)","title":"Vowel signs sit on the letter","blurb":"Like Hindi, every Kannada letter carries a built-in a. A vowel sign changes it, and many signs reshape the curved stroke on top.","note":"Read once before the Ka group","positions":[{"id":"bare","tab":"ಕ","sound":"ka","ipa":"/ka/","rule":"The curved stroke on top (ತಲೆಕಟ್ಟು, talekaṭṭu) marks the built-in a.","parts":[{"t":"ಕ","hi":1},{"t":"ಮಲ"}],"roman":[{"t":"ka","hi":1},{"t":"mala"}],"mean":"lotus"},{"id":"aa","tab":"ಕಾ","sound":"kā","ipa":"/kaː/","rule":"Long ā: a hook joins the top on the right.","parts":[{"t":"ಕಾ","hi":1},{"t":"ಗೆ"}],"roman":[{"t":"kā","hi":1},{"t":"ge"}],"mean":"crow"},{"id":"i","tab":"ಕಿ","sound":"ki","ipa":"/ki/","rule":"i: the top stroke becomes a small curl.","parts":[{"t":"ಕಿ","hi":1},{"t":"ವಿ"}],"roman":[{"t":"ki","hi":1},{"t":"vi"}],"mean":"ear"},{"id":"u","tab":"ಕು","sound":"ku","ipa":"/ku/","rule":"u and ū hang off the right side, and the top stroke stays.","parts":[{"t":"ಕು","hi":1},{"t":"ರಿ"}],"roman":[{"t":"ku","hi":1},{"t":"ri"}],"mean":"sheep"},{"id":"e","tab":"ಕೆ","sound":"ke","ipa":"/ke/","rule":"e and o signs attach at the top right: ಕೆ ke, ಕೊ ko.","parts":[{"t":"ಕೆ","hi":1},{"t":"ರೆ"}],"roman":[{"t":"ke","hi":1},{"t":"re"}],"mean":"lake"}],"contrast":{"from":{"text":"కి కు","font":"var(--font-telugu)","label":"Telugu"},"to":{"text":"ಕಿ ಕು","label":"Kannada"},"note":"Kannada and Telugu grew from the same old script, so many letters are near twins. If you know one, the other reads quickly."}}'::jsonb);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_sa','kannada','Sa group','Palatal','quiz',1,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_tta','kannada','Ta group','Retroflex','sheet',2,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_ta','kannada','Ta group','Dental','review',3,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_pa','kannada','Pa group','Labial','indic',4,NULL,NULL);
+insert into scriptura_app_units (id,language_id,title,subtitle,accent,sort,slots,concept) values ('kannada_misc','kannada','Miscellaneous','Semivowels & sibilants','cjk',5,NULL,NULL);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',0,'ಕ','ka','ka','','क',0,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',1,'ಖ','kha','kha','','ख',1,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',2,'ಗ','ga','ga','','ग',2,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',3,'ಘ','gha','gha','','घ',3,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ka',4,'ಙ','ṅa','ṅa','','ङ',4,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',5,'ಚ','ca','ca','','च',5,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',6,'ಛ','cha','cha','','छ',6,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',7,'ಜ','ja','ja','','ज',7,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',8,'ಝ','jha','jha','','झ',8,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_sa',9,'ಞ','ña','ña','','ञ',9,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',10,'ಟ','ṭa','ṭa','','ट',10,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',11,'ಠ','ṭha','ṭha','','ठ',11,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',12,'ಡ','ḍa','ḍa','','ड',12,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',13,'ಢ','ḍha','ḍha','','ढ',13,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_tta',14,'ಣ','ṇa','ṇa','','ण',14,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',15,'ತ','ta','ta','','त',15,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',16,'ಥ','tha','tha','','थ',16,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',17,'ದ','da','da','','द',17,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',18,'ಧ','dha','dha','','ध',18,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_ta',19,'ನ','na','na','','न',19,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',20,'ಪ','pa','pa','','प',20,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',21,'ಫ','pha','pha','','फ',21,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',22,'ಬ','ba','ba','','ब',22,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',23,'ಭ','bha','bha','','भ',23,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_pa',24,'ಮ','ma','ma','','म',24,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',25,'ಯ','ya','ya','','य',25,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',26,'ರ','ra','ra','','र',26,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',27,'ಲ','la','la','','ल',27,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',28,'ವ','va','va','','व',28,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',29,'ಶ','śa','śa','','श',29,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',30,'ಷ','ṣa','ṣa','','ष',30,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',31,'ಸ','sa','sa','','स',31,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',32,'ಹ','ha','ha','','ह',32,false);
+insert into scriptura_app_characters (language_id,unit_id,char_index,char,roman,name,gloss,cognate,sort,no_vowel_sign) values ('kannada','kannada_misc',33,'ಳ','ḷa','ḷa','','ळ',33,false);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ಾ','ā',NULL,0,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ಿ','i',NULL,1,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೀ','ī',NULL,2,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ು','u',NULL,3,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೂ','ū',NULL,4,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೃ','ṛ',NULL,5,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೆ','e',NULL,6,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೇ','ē',NULL,7,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೈ','ai',NULL,8,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೊ','o',NULL,9,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೋ','ō',NULL,10,NULL);
+insert into scriptura_app_vowels (language_id,sign,label,name,sort,pre) values ('kannada','ೌ','au',NULL,11,NULL);
 
 commit;
